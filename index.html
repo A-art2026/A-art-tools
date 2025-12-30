@@ -3,366 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A_art Planner | نسخه پایدار ۵.۰</title>
+    <title>A_art Planner | نسخه ۶.۰ (فیکس کامل)</title>
     
-    <!-- فونت‌ها -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;700&family=Vazirmatn:wght@300;400;700;900&display=swap" rel="stylesheet">
     
-    <!-- PDF.js (لود از CDN معتبر) -->
+    <!-- PDF Lib -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>
-        // تنظیم مسیر ورکر برای پردازش PDF
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    </script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
 
     <style>
-        /* --- 1. متغیرهای طراحی (تم نئونی و تاریک) --- */
+        /* --- DESIGN SYSTEM --- */
         :root {
-            --bg-body: #050505;
-            --bg-card: #121212;
-            --bg-input: #1a1a1a;
-            --accent: #CCFF00; /* سبز اسیدی */
-            --accent-dim: rgba(204, 255, 0, 0.1);
-            --text-main: #f2f2f2;
-            --text-muted: #888888;
-            --border: #333333;
-            --radius: 12px;
-            --font-fa: 'Vazirmatn', sans-serif;
-            --font-en: 'Lexend', sans-serif;
-            
-            /* رنگ‌های آنالیز */
-            --status-green: #00ff66;
-            --status-yellow: #ffcc00;
-            --status-red: #ff3333;
-            --status-off: #2a2a2a;
+            --bg-body: #050505; --bg-card: #141414; --bg-modal: #1a1a1a; --bg-input: #0a0a0a;
+            --accent: #ccff00; --accent-dim: rgba(204, 255, 0, 0.15);
+            --text-main: #f0f0f0; --text-muted: #888888; --border: #333333; --radius: 12px;
+            --light-green: #00ff66; --light-yellow: #ffcc00; --light-red: #ff3333; --light-off: #333;
+            --font-fa: 'Vazirmatn', sans-serif; --font-en: 'Lexend', sans-serif;
         }
-
         * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-body); color: var(--text-main); font-family: var(--font-fa); margin: 0; padding: 0; min-height: 100vh; padding-bottom: 100px; overflow-x: hidden; }
         
-        body {
-            background-color: var(--bg-body);
-            color: var(--text-main);
-            font-family: var(--font-fa);
-            margin: 0; padding: 0;
-            min-height: 100vh;
-            overflow-x: hidden;
-            padding-bottom: 80px; /* فضای خالی پایین موبایل */
-        }
+        #aura { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; background: radial-gradient(circle at 50% 30%, rgba(204,255,0,0.04), transparent 70%); animation: pulse 8s infinite alternate; }
+        @keyframes pulse { 0% { opacity: 0.5; transform: scale(1); } 100% { opacity: 0.8; transform: scale(1.1); } }
 
-        /* افکت پس‌زمینه زنده */
-        #aura {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none;
-            background: radial-gradient(circle at 50% 30%, rgba(204,255,0,0.03), transparent 60%);
-            animation: pulse 8s infinite alternate;
-        }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 0.5; } 100% { transform: scale(1.1); opacity: 0.8; } }
-
-        /* تایپوگرافی */
+        .container { max-width: 950px; margin: 0 auto; padding: 20px; }
         h1, h2, h3, h4 { color: #fff; font-weight: 700; margin: 0 0 15px 0; }
         .font-en { font-family: var(--font-en); direction: ltr; text-align: left; }
-        .text-accent { color: var(--accent); }
-        .text-muted { color: var(--text-muted); font-size: 0.85rem; }
-
-        /* چیدمان */
-        .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; } /* ریسپانسیو خودکار */
-        .flex { display: flex; } 
-        .justify-between { justify-content: space-between; } 
-        .items-center { align-items: center; }
-        .w-full { width: 100%; }
-        .mt-4 { margin-top: 16px; }
-        .hidden { display: none !important; }
-
-        /* کارت‌ها و فرم‌ها */
-        .card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius);
-            padding: 24px; margin-bottom: 20px; transition: 0.2s; position: relative;
-        }
-        .card:hover { border-color: #555; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+        .text-accent { color: var(--accent); } .text-muted { color: var(--text-muted); font-size: 0.85rem; }
         
-        label { display: block; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-muted); }
+        .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; margin-bottom: 20px; transition: 0.2s; position: relative; }
+        .card:hover { border-color: #444; }
         
-        input, select, textarea {
-            width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: #fff;
-            padding: 12px 16px; border-radius: 8px; font-family: var(--font-fa); font-size: 0.95rem;
-            margin-bottom: 15px; transition: 0.3s;
-        }
+        input, select, textarea { width: 100%; background: var(--bg-input); border: 1px solid var(--border); color: #fff; padding: 12px 16px; border-radius: 8px; font-family: var(--font-fa); font-size: 0.95rem; margin-bottom: 15px; transition: 0.3s; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
-
-        /* دکمه‌ها */
-        .btn {
-            background: transparent; border: 1px solid var(--border); color: var(--text-main);
-            padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: var(--font-fa);
-            font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        
+        .btn { background: transparent; border: 1px solid var(--border); color: var(--text-main); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-family: var(--font-fa); font-size: 0.9rem; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
         .btn:hover { border-color: var(--accent); color: var(--accent); }
         .btn-primary { background: var(--accent); color: #000; border: none; font-weight: 700; }
-        .btn-primary:hover { background: #b3e600; transform: translateY(-2px); box-shadow: 0 4px 15px var(--accent-dim); }
+        .btn-primary:hover { background: #b3e600; transform: translateY(-1px); box-shadow: 0 4px 15px var(--accent-dim); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
-        
-        /* دکمه بستن مودال */
-        .btn-close {
-            background: rgba(255,255,255,0.1); border: none; color: #fff; width: 32px; height: 32px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem;
-        }
-        .btn-close:hover { background: #ff3333; }
+        .btn-close-icon { background: rgba(255,255,255,0.1); border: none; color: #fff; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .btn-close-icon:hover { background: #ff3333; }
 
-        /* هدر و لوگو */
-        header {
-            background: rgba(5,5,5,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-            padding: 15px 0; position: sticky; top: 0; z-index: 100; margin-bottom: 30px;
-        }
-        .logo-img { height: 35px; width: auto; display: block; } 
+        header { background: rgba(5,5,5,0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 15px 0; position: sticky; top: 0; z-index: 100; margin-bottom: 30px; }
+        .logo-img { height: 40px; display: block; object-fit: contain; }
         
-        .nav-link {
-            background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left: 10px;
-            font-size: 0.9rem; font-family: var(--font-fa); padding: 6px 12px; border-radius: 6px; transition: 0.3s;
-        }
-        .nav-link.active { background: rgba(204,255,0,0.1); color: var(--accent); border: 1px solid rgba(204,255,0,0.2); }
+        .nav-link { background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left: 15px; font-size: 0.9rem; font-family: var(--font-fa); padding: 5px 10px; border-radius: 6px; transition: 0.3s; }
+        .nav-link.active { background: rgba(255,255,255,0.05); color: var(--accent); }
 
-        /* مودال فیکس شده */
-        dialog {
-            background: var(--bg-modal); color: var(--text-main); border: 1px solid var(--accent);
-            border-radius: 16px; width: 90%; max-width: 600px; padding: 0;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.9); 
-            position: fixed; inset: 0; margin: auto; /* مرکزچین دقیق */
-            z-index: 9999;
-            max-height: 90vh;
-        }
-        dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); }
-        
+        dialog { background: var(--bg-modal); color: var(--text-main); border: 1px solid var(--border); border-radius: 16px; width: 90%; max-width: 600px; padding: 0; box-shadow: 0 20px 60px rgba(0,0,0,0.9); position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000; }
+        dialog::backdrop { background: rgba(0,0,0,0.8); backdrop-filter: blur(4px); }
         .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); }
-        .modal-body { padding: 20px; overflow-y: auto; max-height: calc(90vh - 120px); }
+        .modal-body { padding: 20px; max-height: 70vh; overflow-y: auto; }
         .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; background: rgba(0,0,0,0.2); }
 
-        /* نشانگر مراحل (Wizard Steps) */
-        .step-indicator { display: flex; gap: 6px; margin-bottom: 25px; background: #222; padding: 5px; border-radius: 50px; }
-        .step-dot { flex: 1; height: 6px; background: #444; border-radius: 4px; transition: 0.4s; }
-        .step-dot.active { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
-
-        /* چراغ‌های آنالیز (Traffic Lights) */
-        .checklist-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 15px; background: #222; border: 1px solid #333;
-            border-radius: 8px; margin-bottom: 8px;
-        }
-        .light {
-            width: 16px; height: 16px; border-radius: 50%;
-            background: var(--status-off);
-            box-shadow: inset 0 0 3px rgba(0,0,0,0.5);
-            transition: all 0.3s ease;
-        }
-        .light.green { background: var(--status-green); box-shadow: 0 0 10px var(--status-green); }
-        .light.yellow { background: var(--status-yellow); box-shadow: 0 0 10px var(--status-yellow); }
-        .light.red { background: var(--status-red); box-shadow: 0 0 10px var(--status-red); }
-
-        /* تب‌ها */
-        .tabs { display: flex; background: #000; padding: 4px; border-radius: 8px; margin-bottom: 15px; }
-        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #888; border-radius: 6px; transition: 0.3s; }
+        .tabs { display: flex; gap: 5px; margin-bottom: 15px; background: #222; padding: 4px; border-radius: 8px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; border-radius: 6px; font-size: 0.9rem; color: #888; }
         .tab.active { background: var(--accent); color: #000; font-weight: bold; }
 
-        @media (max-width: 768px) {
-            .grid-2 { grid-template-columns: 1fr; }
-            .nav-link { font-size: 0.8rem; padding: 4px 8px; margin-left: 5px; }
-        }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .flex { display: flex; } .justify-between { justify-content: space-between; } .items-center { align-items: center; }
+        .hidden { display: none !important; } .mt-4 { margin-top: 16px; }
+
+        .step-indicator { display: flex; gap: 5px; margin-bottom: 20px; }
+        .step-dot { flex: 1; height: 4px; background: #333; border-radius: 2px; transition: 0.3s; }
+        .step-dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
+        
+        .flicker { animation: blink 1s infinite alternate; color: var(--accent); }
+        @keyframes blink { 0% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        /* Checklist & Analysis */
+        .checklist-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #222; border-radius: 8px; margin-bottom: 8px; border: 1px solid #333; }
+        .light { width: 14px; height: 14px; border-radius: 50%; background: var(--light-off); box-shadow: inset 0 0 2px rgba(0,0,0,0.5); }
+        .light.green { background: var(--light-green); box-shadow: 0 0 8px var(--light-green); }
+        .light.yellow { background: var(--light-yellow); box-shadow: 0 0 8px var(--light-yellow); }
+        .light.red { background: var(--light-red); box-shadow: 0 0 8px var(--light-red); }
+
+        .analysis-box { background: #222; padding: 15px; border-radius: 8px; margin-top: 10px; border-right: 3px solid #333; }
+        .analysis-box h4 { margin: 0 0 10px 0; font-size: 0.95rem; }
+        .analysis-box ul { margin: 0; padding-right: 20px; font-size: 0.85rem; color: #ccc; }
+
+        /* Copy Button */
+        .copy-btn { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #444; border-radius: 4px; padding: 4px 8px; cursor: pointer; font-size: 0.75rem; }
+        .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+        @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
     <div id="aura"></div>
 
-    <!-- MODAL: SETTINGS (API) -->
+    <!-- SETTINGS MODAL -->
     <dialog id="settings-modal">
         <div class="modal-header">
-            <h3>تنظیمات هوش مصنوعی</h3>
-            <button class="btn-close" onclick="document.getElementById('settings-modal').close()">✕</button>
+            <h3>تنظیمات API</h3>
+            <button class="btn-close-icon" onclick="document.getElementById('settings-modal').close()">✕</button>
         </div>
         <div class="modal-body">
             <div class="tabs">
-                <div class="tab active" id="tab-gemini" onclick="app.setApiTab('gemini')">Google Gemini</div>
-                <div class="tab" id="tab-openai" onclick="app.setApiTab('openai')">Metis / OpenAI</div>
+                <div class="tab active" id="t-gemini" onclick="app.setTab('gemini')">Google Gemini</div>
+                <div class="tab" id="t-openai" onclick="app.setTab('openai')">Metis / OpenAI</div>
             </div>
-
-            <!-- Gemini Config -->
             <div id="conf-gemini">
-                <p class="text-muted">اتصال مستقیم به گوگل (نیاز به تغییر IP).</p>
-                <label>API Key</label>
-                <input type="password" id="gemini-key" class="font-en" placeholder="AIzaSy...">
-                <label>مدل (Model)</label>
-                <input list="models-list" id="gemini-model" class="font-en" placeholder="gemini-2.0-flash-exp">
-                <datalist id="models-list">
-                    <option value="gemini-2.0-flash-exp">Gemini 2.0 Flash (جدید)</option>
-                    <option value="gemini-1.5-flash">Gemini 1.5 Flash (سریع)</option>
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (قدرتمند)</option>
-                </datalist>
+                <p class="text-muted">نیاز به فیلترشکن.</p>
+                <label>API Key</label><input type="password" id="gemini-key" class="font-en" placeholder="AIzaSy...">
+                <label>Model</label><input list="gemini-list" id="gemini-model" class="font-en" placeholder="gemini-2.0-flash-exp"><datalist id="gemini-list"><option value="gemini-2.0-flash-exp"/><option value="gemini-1.5-flash"/></datalist>
             </div>
-
-            <!-- Metis/OpenAI Config -->
             <div id="conf-openai" class="hidden">
-                <p class="text-muted">اتصال به MetisAI یا سرویس‌های مشابه (بدون تحریم).</p>
-                <label>Base URL (آدرس سرور)</label>
-                <input type="text" id="custom-url" class="font-en" placeholder="https://api.metisai.ir/openai/v1">
-                <label>API Key</label>
-                <input type="password" id="custom-key" class="font-en" placeholder="sk-...">
-                <label>Model Name</label>
-                <input type="text" id="custom-model" class="font-en" placeholder="gpt-4o-mini">
+                <p class="text-muted">اتصال بدون تحریم (Metis/Proxy).</p>
+                <label>Base URL</label><input type="text" id="custom-url" class="font-en" placeholder="https://api.metisai.ir/openai/v1">
+                <label>API Key</label><input type="password" id="custom-key" class="font-en" placeholder="sk-...">
+                <label>Model Name</label><input type="text" id="custom-model" class="font-en" placeholder="gpt-4o-mini">
             </div>
-
-            <div style="background:#222; padding:10px; border-radius:8px; margin-top:15px; border:1px solid #333">
-                <div class="flex justify-between items-center">
-                    <span style="font-size:0.8rem">وضعیت: <span id="conn-status" style="color:#aaa">نامشخص</span></span>
-                    <button class="btn btn-sm" style="border:1px solid #555" onclick="app.testConnection()">تست اتصال</button>
-                </div>
+            <div style="margin-top:15px; padding:10px; background:rgba(255,255,255,0.05); border-radius:8px;">
+                <span id="conn-status" class="font-en" style="font-size:0.8rem; color:#aaa"></span>
+                <button class="btn btn-sm mt-2 w-full" onclick="app.testConn()">تست اتصال</button>
             </div>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-primary" onclick="app.saveSettings()">ذخیره تنظیمات</button>
+            <button class="btn" onclick="document.getElementById('settings-modal').close()">انصراف</button>
+            <button class="btn btn-primary" onclick="app.saveSettings()">ذخیره</button>
         </div>
     </dialog>
 
-    <!-- HEADER -->
     <header>
         <div class="container flex justify-between items-center">
-            <!-- LOGO: SVG Placeholder used here. Replace src with your image URL -->
-            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgNTAiPjx0ZXh0IHg9IjEwIiB5PSIzNSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXdlaWdodD0iYm9sZCIgZm9udC1zaXplPSIzMCIgZmlsbD0iI2ZmZiI+QV9hcnQgPHRzcGFuIGZpbGw9IiNjY2ZmMDAiPlBsYW5uZXI8L3RzcGFuPjwvdGV4dD48L3N2Zz4=" alt="A_art Planner" class="logo-img">
+            <!-- LOGO: IMAGE PLACEHOLDER -->
+            <img src="https://placehold.co/160x40/000000/CCFF00?text=A_art+Tools&font=playfair-display" alt="A_art Tools" class="logo-img" id="main-logo">
             
             <nav>
-                <button class="nav-link active" onclick="app.nav('home')">خانه</button>
+                <button class="nav-link active" onclick="app.nav('home')">پروژه‌ها</button>
                 <button class="nav-link" onclick="app.nav('briefs')">بریف‌ها</button>
-                <button class="nav-link" onclick="app.nav('templates')">تمپلیت</button>
-                <button class="nav-link" onclick="app.nav('brain')">مغز</button>
-                <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">⚙️</button>
+                <button class="nav-link" onclick="app.nav('templates')">تمپلیت‌ها</button>
+                <button class="nav-link" onclick="app.nav('brain')">مغز متفکر</button>
+                <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">⚙️ API</button>
             </nav>
         </div>
     </header>
 
-    <!-- MAIN APP CONTAINER -->
     <main id="root" class="container"></main>
 
-    <!-- LOGIC -->
     <script>
-        // --- داده‌های پایه (تمپلیت‌ها) ---
         const FRAMEWORKS = {
             'AIDA': {
-                name: 'AIDA (توجه، علاقه، تمایل، اقدام)',
-                desc: 'استانداردترین مدل برای تبلیغات و فروش.',
-                fields: [
-                    {id:'att', label:'Attention (توجه)', hint:'تیتر یا تصویر جذاب برای توقف اسکرول'},
-                    {id:'int', label:'Interest (علاقه)', hint:'اطلاعات جذاب مرتبط با نیاز مخاطب'},
-                    {id:'des', label:'Desire (تمایل)', hint:'ایجاد اشتیاق با مزایا و اثبات'},
-                    {id:'act', label:'Action (اقدام)', hint:'فراخوان عمل (CTA) شفاف'}
-                ]
+                name: 'AIDA', desc: 'مدل کلاسیک فروش',
+                fields: [ {id:'att',label:'Attention',hint:'تیتر ۳ ثانیه‌ای'}, {id:'int',label:'Interest',hint:'جذابیت و ربط'}, {id:'des',label:'Desire',hint:'اشتیاق و مزایا'}, {id:'act',label:'Action',hint:'دعوت به اقدام'} ]
             },
             'PAS': {
-                name: 'PAS (مشکل، تشدید، راه‌حل)',
-                desc: 'تمرکز بر درد مخاطب برای فروش راه‌حل.',
-                fields: [
-                    {id:'prob', label:'Problem (مشکل)', hint:'بیان شفاف درد یا چالش مخاطب'},
-                    {id:'agi', label:'Agitate (تشدید)', hint:'نمک پاشیدن روی زخم (عواقب مشکل)'},
-                    {id:'sol', label:'Solution (راه‌حل)', hint:'معرفی محصول شما به عنوان نجات‌دهنده'}
-                ]
+                name: 'PAS', desc: 'حل درد مشتری',
+                fields: [ {id:'prob',label:'Problem',hint:'درد مشتری'}, {id:'agi',label:'Agitate',hint:'تشدید مشکل'}, {id:'sol',label:'Solution',hint:'راه حل شما'} ]
             },
             'StoryBrand': {
-                name: 'StoryBrand (داستان برند)',
-                desc: 'سفر قهرمان (مشتری) با راهنمایی شما.',
-                fields: [
-                    {id:'char', label:'شخصیت (قهرمان)', hint:'خواسته مشتری چیست؟'},
-                    {id:'prob', label:'مشکل', hint:'مانع سر راه او چیست؟'},
-                    {id:'guide', label:'راهنما (برند)', hint:'همدلی و صلاحیت برند'},
-                    {id:'plan', label:'نقشه', hint:'مراحل ساده استفاده'},
-                    {id:'cta', label:'CTA', hint:'دعوت به اقدام'},
-                    {id:'res', label:'موفقیت', hint:'تصویر زندگی ایده‌آل بعد از خرید'}
-                ]
+                name: 'StoryBrand', desc: 'سفر قهرمان',
+                fields: [ {id:'char',label:'شخصیت',hint:'قهرمان'}, {id:'prob',label:'مشکل',hint:'مانع'}, {id:'guide',label:'راهنما',hint:'برند شما'}, {id:'plan',label:'نقشه',hint:'مسیر'}, {id:'cta',label:'CTA',hint:'دعوت'}, {id:'res',label:'موفقیت',hint:'پیروزی'} ]
             },
             '4Ps': {
-                name: '4Ps (تصویرسازی)',
-                desc: 'ترسیم آینده روشن برای محصول.',
-                fields: [
-                    {id:'pic', label:'Picture', hint:'تصویرسازی آینده'},
-                    {id:'prom', label:'Promise', hint:'قول برند'},
-                    {id:'proof', label:'Proof', hint:'اثبات ادعا'},
-                    {id:'push', label:'Push', hint:'هل دادن به سمت خرید'}
-                ]
+                name: '4Ps', desc: 'تصویرسازی آینده',
+                fields: [ {id:'pic',label:'Picture',hint:'تصویر آینده'}, {id:'prom',label:'Promise',hint:'قول برند'}, {id:'proof',label:'Proof',hint:'اثبات'}, {id:'push',label:'Push',hint:'هل دادن'} ]
+            },
+            'APP': {
+                name: 'APP', desc: 'محتوای آموزشی',
+                fields: [ {id:'awa',label:'Awareness',hint:'آگاهی'}, {id:'prob',label:'Problem',hint:'مشکل'}, {id:'pos',label:'Positioning',hint:'جایگاه ما'} ]
             }
         };
 
-        // --- کلاس اصلی برنامه ---
         class App {
             constructor() {
                 this.state = {
                     view: 'home',
-                    // داده‌ها (ذخیره در لوکال استوریج)
                     projects: JSON.parse(localStorage.getItem('avp_projects') || '[]'),
                     briefs: JSON.parse(localStorage.getItem('avp_briefs') || '[]'),
                     brain: JSON.parse(localStorage.getItem('avp_brain') || '[]'),
-                    
-                    // تنظیمات API
                     provider: localStorage.getItem('avp_provider') || 'gemini',
                     geminiKey: localStorage.getItem('avp_gemini_key') || '',
                     geminiModel: localStorage.getItem('avp_gemini_model') || 'gemini-1.5-flash',
                     customUrl: localStorage.getItem('avp_custom_url') || 'https://api.metisai.ir/openai/v1',
                     customKey: localStorage.getItem('avp_custom_key') || '',
                     customModel: localStorage.getItem('avp_custom_model') || 'gpt-4o-mini',
-
-                    // وضعیت جاری
-                    activeProj: null,
-                    activeBrief: null,
-                    step: 1,
-                    temp: {},
-                    loading: false
+                    activeProj: null, activeBrief: null, step: 1, temp: {}, loading: false
                 };
-
-                // بارگذاری تنظیمات در UI
+                
                 setTimeout(() => {
                     document.getElementById('gemini-key').value = this.state.geminiKey;
                     document.getElementById('gemini-model').value = this.state.geminiModel;
                     document.getElementById('custom-url').value = this.state.customUrl;
                     document.getElementById('custom-key').value = this.state.customKey;
                     document.getElementById('custom-model').value = this.state.customModel;
-                    this.setApiTab(this.state.provider);
-                }, 500);
+                    this.setTab(this.state.provider);
+                }, 100);
 
-                if(!this.state.geminiKey && !this.state.customKey) {
-                    setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
-                }
-
+                if(!this.state.geminiKey && !this.state.customKey) setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
                 this.render();
             }
 
-            // --- مدیریت تنظیمات ---
-            setApiTab(prov) {
-                this.state.provider = prov;
-                document.querySelectorAll('.tab').forEach(e => e.classList.remove('active'));
-                document.getElementById('tab-' + prov).classList.add('active');
-                document.getElementById('conf-gemini').classList.add('hidden');
-                document.getElementById('conf-openai').classList.add('hidden');
-                document.getElementById('conf-' + prov).classList.remove('hidden');
-            }
-
-            saveSettings() {
-                this.state.geminiKey = document.getElementById('gemini-key').value.trim();
-                this.state.geminiModel = document.getElementById('gemini-model').value.trim();
-                this.state.customUrl = document.getElementById('custom-url').value.trim();
-                this.state.customKey = document.getElementById('custom-key').value.trim();
-                this.state.customModel = document.getElementById('custom-model').value.trim();
-
-                localStorage.setItem('avp_provider', this.state.provider);
-                localStorage.setItem('avp_gemini_key', this.state.geminiKey);
-                localStorage.setItem('avp_gemini_model', this.state.geminiModel);
-                localStorage.setItem('avp_custom_url', this.state.customUrl);
-                localStorage.setItem('avp_custom_key', this.state.customKey);
-                localStorage.setItem('avp_custom_model', this.state.customModel);
-
-                document.getElementById('settings-modal').close();
-                alert('ذخیره شد');
-            }
-
-            async testConnection() {
-                const s = document.getElementById('conn-status');
-                s.innerText = 'درحال اتصال...'; s.style.color = 'yellow';
+            setTab(p) { this.state.provider = p; document.querySelectorAll('.tab').forEach(e => e.classList.remove('active')); document.getElementById('t-'+p).classList.add('active'); document.getElementById('conf-gemini').classList.add('hidden'); document.getElementById('conf-openai').classList.add('hidden'); document.getElementById('conf-'+p).classList.remove('hidden'); }
+            saveSettings() { this.state.geminiKey=document.getElementById('gemini-key').value.trim(); this.state.geminiModel=document.getElementById('gemini-model').value.trim(); this.state.customUrl=document.getElementById('custom-url').value.trim(); this.state.customKey=document.getElementById('custom-key').value.trim(); this.state.customModel=document.getElementById('custom-model').value.trim(); localStorage.setItem('avp_provider',this.state.provider); localStorage.setItem('avp_gemini_key',this.state.geminiKey); localStorage.setItem('avp_gemini_model',this.state.geminiModel); localStorage.setItem('avp_custom_url',this.state.customUrl); localStorage.setItem('avp_custom_key',this.state.customKey); localStorage.setItem('avp_custom_model',this.state.customModel); document.getElementById('settings-modal').close(); alert('تنظیمات ذخیره شد'); }
+            
+            async testConn() {
+                const s = document.getElementById('conn-status'); s.innerText = 'درحال اتصال...'; s.style.color = '#ffcc00';
                 try {
                     const res = await this.callAI("Say OK", false);
                     if(res.startsWith("ERR")) throw new Error(res);
@@ -370,13 +213,10 @@
                 } catch(e) { s.innerText = 'خطا: ' + e.message; s.style.color = '#ff3333'; }
             }
 
-            // --- مسیریابی ---
             nav(view, id = null) {
-                this.state.view = view;
-                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                this.state.view = view; document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 const map = {'home':0, 'briefs':1, 'templates':2, 'brain':3};
                 if(map[view]!==undefined) document.querySelectorAll('.nav-link')[map[view]].classList.add('active');
-
                 if (view === 'wizard') {
                     const p = this.state.projects.find(x => x.id === id);
                     this.state.activeProj = p;
@@ -387,307 +227,187 @@
                 this.render();
             }
 
-            // --- رندر صفحات ---
-            render() {
-                const root = document.getElementById('root');
-                root.innerHTML = '';
-                switch(this.state.view) {
-                    case 'home': root.innerHTML = this.viewHome(); break;
-                    case 'briefs': root.innerHTML = this.viewBriefs(); break;
-                    case 'templates': root.innerHTML = this.viewTemplates(); break;
-                    case 'brain': root.innerHTML = this.viewBrain(); break;
-                    case 'setup': root.innerHTML = this.viewSetup(); break;
-                    case 'wizard': this.renderWizard(root); break;
-                }
-            }
+            render() { const root = document.getElementById('root'); root.innerHTML = ''; switch(this.state.view) { case 'home': root.innerHTML = this.viewHome(); break; case 'briefs': root.innerHTML = this.viewBriefs(); break; case 'templates': root.innerHTML = this.viewTemplates(); break; case 'brain': root.innerHTML = this.viewBrain(); break; case 'setup': root.innerHTML = this.viewSetup(); break; case 'wizard': this.renderWizard(root); break; } }
 
             viewHome() {
-                return `
-                    <div class="flex justify-between items-center mb-4">
-                        <h2>داشبورد پروژه‌ها</h2>
-                        <button class="btn btn-primary" onclick="app.nav('setup')">+ پروژه جدید</button>
-                    </div>
-                    <div class="grid-3">
-                        ${this.state.projects.map(p => {
-                            const b = this.state.briefs.find(x=>x.id===p.briefId);
-                            return `<div class="card" onclick="app.nav('wizard','${p.id}')" style="cursor:pointer">
-                                <h3>${p.name}</h3>
-                                <div class="text-muted" style="margin:10px 0; font-size:0.8rem">${p.plat} | ${b?b.name:'-'}</div>
-                                <button class="btn btn-sm" onclick="event.stopPropagation();app.delProj('${p.id}')">حذف</button>
-                            </div>`
-                        }).join('')}
-                    </div>
-                    ${this.state.projects.length===0?'<div class="text-muted" style="text-align:center; padding:20px">هیچ پروژه‌ای ندارید.</div>':''}
-                `;
+                return `<div class="flex justify-between items-center mb-4"><h2>پروژه‌ها</h2><button class="btn btn-primary" onclick="app.nav('setup')">+ پروژه جدید</button></div><div class="grid-3">${this.state.projects.map(p => { const b = this.state.briefs.find(x=>x.id===p.briefId); return `<div class="card" onclick="app.nav('wizard','${p.id}')" style="cursor:pointer"><h3>${p.name}</h3><div style="font-size:0.8rem;color:#888;margin:10px 0">${p.plat} | ${b?b.name:'-'}</div><button class="btn btn-sm" onclick="event.stopPropagation();app.delProj('${p.id}')">حذف</button></div>` }).join('')}</div>${this.state.projects.length===0?'<div class="text-center text-muted">خالی</div>':''}`;
             }
-
             viewTemplates() {
-                return `
-                    <h2>کتابخانه تمپلیت‌ها</h2>
-                    <div class="grid-2">
-                        ${Object.keys(FRAMEWORKS).map(k => {
-                            const f = FRAMEWORKS[k];
-                            return `<div class="card">
-                                <h3 class="text-accent">${f.name}</h3>
-                                <p class="text-muted">${f.desc}</p>
-                                <div style="font-size:0.8rem; margin-top:10px; color:#aaa">
-                                    ${f.fields.map(field => `[${field.label}]`).join(' ')}
-                                </div>
-                            </div>`
-                        }).join('')}
-                    </div>
-                `;
+                return `<h2>تمپلیت‌ها</h2><div class="grid-2">${Object.keys(FRAMEWORKS).map(k=>{const f=FRAMEWORKS[k]; return `<div class="card"><h3 class="text-accent">${f.name}</h3><p style="font-size:0.9rem">${f.desc}</p></div>`}).join('')}</div>`;
             }
-
             viewBriefs() {
                 return `
                     <div class="card" style="border-top:4px solid var(--accent)">
-                        <h2>ساخت پروفایل (بریف) جدید</h2>
+                        <h2>ساخت بریف جدید</h2>
                         <div class="grid-2">
                             <div><label>نام برند</label><input id="bf-name"></div>
                             <div>
-                                <label>پر کردن خودکار با فایل (PDF/TXT)</label>
-                                <div class="flex" style="gap:10px">
+                                <label>تکمیل با فایل (PDF/TXT)</label>
+                                <div class="flex" style="gap:5px">
                                     <input type="file" id="bf-file" accept=".pdf,.txt" style="font-size:0.8rem">
                                     <button class="btn btn-sm" onclick="app.autoFillBrief()">✨ AI</button>
                                 </div>
                             </div>
                         </div>
-                        <label>لحن برند</label><input id="bf-tone" placeholder="دوستانه، رسمی...">
-                        <label>توضیحات / درباره ما</label><textarea id="bf-desc" rows="2"></textarea>
-                        <label>مخاطب هدف</label><textarea id="bf-aud" rows="2"></textarea>
-                        <button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره پروفایل</button>
+                        <label>لحن برند</label><input id="bf-tone">
+                        <label>توضیحات</label><textarea id="bf-desc" rows="2"></textarea>
+                        <label>مخاطب</label><textarea id="bf-aud" rows="2"></textarea>
+                        <button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره</button>
                     </div>
-                    <div class="grid-3 mt-4">
-                        ${this.state.briefs.map(b => `
-                            <div class="card">
-                                <h3 class="text-accent">${b.name}</h3>
-                                <p style="font-size:0.8rem; color:#aaa">${b.desc.substring(0,50)}...</p>
-                                <button class="btn btn-sm w-full mt-2" onclick="app.delBrief('${b.id}')">حذف</button>
-                            </div>
-                        `).join('')}
-                    </div>
+                    <div class="grid-3 mt-4">${this.state.briefs.map(b => `<div class="card"><h3 class="text-accent">${b.name}</h3><button class="btn btn-sm mt-2" onclick="app.delBrief('${b.id}')">حذف</button></div>`).join('')}</div>
                 `;
             }
-
             viewBrain() {
-                return `
-                    <div class="card">
-                        <h2>مغز متفکر (منابع دانش)</h2>
-                        <p class="text-muted">مقاله‌ها، کاتالوگ محصول یا اسناد استراتژی را اینجا آپلود کنید.</p>
-                        <div class="grid-2">
-                            <div>
-                                <label>عنوان</label><input id="br-title">
-                                <label>آپلود فایل</label><input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt">
-                                ${this.state.loading ? '<span class="flicker text-accent">درحال پردازش...</span>' : ''}
-                            </div>
-                            <div>
-                                <label>متن استخراج شده</label><textarea id="br-text" rows="5"></textarea>
-                                <button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن به مغز</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid-3 mt-4">
-                        ${this.state.brain.map(b => `<div class="card"><strong>${b.title}</strong><button class="btn btn-sm w-full mt-2" onclick="app.delBrain('${b.id}')">حذف</button></div>`).join('')}
-                    </div>
-                `;
+                return `<div class="card"><h2>مغز متفکر (منابع دانش)</h2><div class="grid-2"><div><label>عنوان</label><input id="br-title"><input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt">${this.state.loading?'<span class="flicker">...</span>':''}</div><div><label>متن</label><textarea id="br-text" rows="5"></textarea><button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن</button></div></div></div><div class="grid-3 mt-4">${this.state.brain.map(b => `<div class="card"><strong>${b.title}</strong><button class="btn btn-sm w-full mt-2" onclick="app.delBrain('${b.id}')">حذف</button></div>`).join('')}</div>`;
             }
-
             viewSetup() {
-                if(this.state.briefs.length === 0) return '<div class="text-center" style="padding-top:50px"><h2>ابتدا یک بریف بسازید</h2><button class="btn btn-primary mt-4" onclick="app.nav(\'briefs\')">رفتن به بریف‌ها</button></div>';
-                return `
-                    <h2>شروع پروژه جدید</h2>
-                    <div class="grid-2">
-                        <div class="card">
-                            <label>۱. انتخاب بریف (پروفایل)</label>
-                            <div style="max-height:200px; overflow-y:auto; display:flex; flex-direction:column; gap:10px">
-                                ${this.state.briefs.map(b => `<div class="card" style="margin:0; padding:10px; cursor:pointer; background:#222; border:1px solid #333" id="br-${b.id}" onclick="app.selBr('${b.id}')"><strong>${b.name}</strong></div>`).join('')}
-                            </div>
-                        </div>
-                        <div class="card">
-                            <label>۲. نام پروژه</label><input id="np-name">
-                            <label>۳. پلتفرم</label>
-                            <select id="np-plat">
-                                <option>Instagram Reel</option><option>Instagram Post</option><option>LinkedIn</option><option>Website</option><option>Telegram</option>
-                            </select>
-                            <button class="btn btn-primary w-full mt-4" onclick="app.createProj()">ساخت پروژه</button>
-                        </div>
-                    </div>
-                `;
+                if(this.state.briefs.length===0) return '<div class="text-center pt-5"><h2>اول بریف بسازید</h2><button class="btn btn-primary mt-4" onclick="app.nav(\'briefs\')">ساخت بریف</button></div>';
+                return `<h2>انتخاب بریف</h2><div class="grid-3 mb-4">${this.state.briefs.map(b=>`<div class="card" id="br-${b.id}" onclick="app.selBr('${b.id}')" style="cursor:pointer;border:2px solid transparent;background:#1a1a1a"><strong>${b.name}</strong></div>`).join('')}</div><div class="card"><label>نام پروژه</label><input id="np-name"><label>پلتفرم</label><select id="np-plat"><option>Instagram Reel</option><option>Instagram Post</option><option>LinkedIn</option><option>Telegram</option></select><button class="btn btn-primary w-full mt-4" onclick="app.createProj()">ایجاد</button></div>`;
             }
-            selBr(id) {
-                document.querySelectorAll('[id^="br-"]').forEach(e => {e.style.borderColor='#333'; e.style.backgroundColor='#222'});
-                document.getElementById('br-'+id).style.borderColor='var(--accent)';
-                document.getElementById('br-'+id).style.backgroundColor='var(--bg-input)';
-                this.state.selBrId = id;
-            }
+            selBr(id) { document.querySelectorAll('[id^="br-"]').forEach(e=>{e.style.borderColor='transparent';e.style.backgroundColor='#1a1a1a'}); document.getElementById('br-'+id).style.borderColor='var(--accent)'; document.getElementById('br-'+id).style.backgroundColor='var(--bg-card)'; this.state.selBrId=id; }
 
-            // --- ویزارد ---
             renderWizard(root) {
                 const s = this.state.step; const d = this.state.temp;
                 let c = '';
-
-                // Step 1: Strategy
-                if(s===1) {
-                    c = `<h3>۱. استراتژی محتوا</h3>
-                    <div class="grid-2">
-                        <div><label>هدف</label><select id="i-obj" onchange="app.setD('obj',this.value)"><option>Awareness</option><option>Sales</option><option>Engagement</option><option>Education</option></select></div>
-                        <div><label>موضوع (Topic)</label><input value="${d.topic||''}" onchange="app.setD('topic',this.value)"></div>
-                    </div>
-                    <label>پیام کلیدی / آفر</label><textarea rows="3" onchange="app.setD('msg',this.value)">${d.msg||''}</textarea>`;
-                }
-                // Step 2: Template
-                else if(s===2) {
-                    let rec='AIDA';
-                    if(d.obj==='Sales')rec='PAS'; if(d.obj==='Engagement')rec='StoryBrand'; if(!d.tmpl)d.tmpl=rec;
-                    c = `<h3>۲. انتخاب قالب</h3>
-                    <div class="card" style="border-color:var(--accent)"><strong class="text-accent">پیشنهاد هوش مصنوعی: ${rec}</strong></div>
-                    <select id="i-tmpl" onchange="app.setD('tmpl',this.value);app.render()">${Object.keys(FRAMEWORKS).map(k=>`<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}</select>
-                    <p class="mt-4 text-muted">${FRAMEWORKS[d.tmpl].desc}</p>`;
-                }
-                // Step 3: Content
-                else if(s===3) {
-                    const f = FRAMEWORKS[d.tmpl].fields;
+                if(s===1) c = `<h3>۱. استراتژی</h3><div class="grid-2"><div><label>هدف</label><select id="i-obj" onchange="app.setD('obj',this.value)"><option>Awareness</option><option>Sales</option><option>Engagement</option></select></div><div><label>موضوع</label><input value="${d.topic||''}" onchange="app.setD('topic',this.value)"></div></div><label>پیام اصلی</label><textarea onchange="app.setD('msg',this.value)">${d.msg||''}</textarea>`;
+                else if(s===2) { let rec='AIDA'; if(d.obj==='Sales')rec='PAS'; if(d.obj==='Engagement')rec='StoryBrand'; if(!d.tmpl)d.tmpl=rec; c = `<h3>۲. انتخاب قالب</h3><div class="card" style="border-color:var(--accent)"><strong class="text-accent">پیشنهاد: ${rec}</strong></div><select id="i-tmpl" onchange="app.setD('tmpl',this.value);app.render()">${Object.keys(FRAMEWORKS).map(k=>`<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}</select>`; }
+                else if(s===3) { 
+                    const f=FRAMEWORKS[d.tmpl].fields; 
                     c = `<h3>۳. تولید محتوا (${d.tmpl})</h3>
-                    <button class="btn btn-sm mb-4" onclick="app.autoFill()" style="border:1px solid var(--accent); color:var(--accent)">✨ تکمیل خودکار با AI</button>
-                    <div id="f-cont">${f.map(x=>`<div class="mb-4"><label class="text-accent">${x.label}</label><p class="text-muted" style="font-size:0.8rem; margin-bottom:5px">${x.hint}</p><textarea rows="3" onchange="app.setCF('${x.id}',this.value)">${(d.cf&&d.cf[x.id])||''}</textarea></div>`).join('')}</div>`;
+                    <div style="display:flex;gap:10px;margin-bottom:20px">
+                        <button class="btn btn-sm" onclick="app.autoFill()" style="border:1px solid var(--accent);color:var(--accent)">✨ نوشتن خودکار</button>
+                        <button class="btn btn-sm" onclick="app.refineContent()">🔧 بهبود متن با AI</button>
+                    </div>
+                    <div id="f-cont">${f.map(x=>`<div class="mb-4"><label class="text-accent">${x.label}</label><p class="text-muted" style="font-size:0.8rem">${x.hint}</p><textarea rows="3" id="in-${x.id}" onchange="app.setCF('${x.id}',this.value)">${(d.cf&&d.cf[x.id])||''}</textarea></div>`).join('')}</div>`; 
                 }
-                // Step 4: Analysis (Traffic Lights)
-                else if(s===4) {
-                    c = `<h3>۴. بررسی کیفی (چک‌لیست)</h3>
+                else if(s===4) { 
+                    c = `<h3>۴. بررسی کیفی (آنالیز)</h3>
                     <button class="btn btn-primary w-full" id="b-anlz" onclick="app.analyze()">شروع تحلیل</button>
-                    <div id="check-res" class="mt-4 hidden card" style="background:#1a1a1a"></div>`;
+                    <div id="check-res" class="mt-4 hidden"></div>`; 
                 }
-                // Step 5: Output
-                else if(s===5) {
-                    let txt=`پلتفرم: ${this.state.activeProj.plat}\nقالب: ${d.tmpl}\n\n`;
-                    if(d.cf) Object.values(d.cf).forEach(v=>txt+=v+"\n\n");
-                    c = `<h3>۵. خروجی نهایی</h3><div class="grid-2"><div><label>سناریو کامل</label><textarea rows="10" id="ftxt">${txt}</textarea></div><div><button class="btn btn-primary w-full mb-2" id="b-cap" onclick="app.caption()">تولید کپشن</button><textarea rows="8" id="fcap">${d.cap||''}</textarea></div></div>`;
+                else if(s===5) { 
+                    let t=`پلتفرم: ${this.state.activeProj.plat}\nقالب: ${d.tmpl}\n\n`; if(d.cf) Object.values(d.cf).forEach(v=>t+=v+"\n\n"); 
+                    c = `<h3>۵. خروجی نهایی</h3>
+                    <div class="grid-2">
+                        <div style="position:relative">
+                            <label>سناریو کامل</label><textarea rows="12" id="ftxt">${t}</textarea>
+                            <button class="copy-btn" onclick="app.copyTo('ftxt')">کپی</button>
+                        </div>
+                        <div style="position:relative">
+                            <label>کپشن</label><button class="btn btn-primary w-full mb-2" id="b-cap" onclick="app.caption()">تولید کپشن</button><textarea rows="9" id="fcap">${d.cap||''}</textarea>
+                            <button class="copy-btn" style="top:55px" onclick="app.copyTo('fcap')">کپی</button>
+                        </div>
+                    </div>`; 
                 }
 
-                root.innerHTML = `
-                    <div class="flex justify-between items-center mb-4"><button class="btn" onclick="app.nav('home')">خروج</button><span>${this.state.activeProj.name}</span></div>
-                    <div class="step-indicator">${[1,2,3,4,5].map(i=>`<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}</div>
-                    <div class="card" style="min-height:400px">${c}</div>
-                    <div class="flex justify-between"><button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>قبلی</button><button class="btn btn-primary" onclick="app.step(1)">${s==5?'پایان':'بعدی'}</button></div>
-                `;
+                root.innerHTML = `<div class="flex justify-between items-center mb-4"><button class="btn" onclick="app.nav('home')">خروج</button><span>${this.state.activeProj.name}</span></div><div class="step-indicator">${[1,2,3,4,5].map(i=>`<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}</div><div class="card" style="min-height:400px">${c}</div><div class="flex justify-between"><button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>قبلی</button><button class="btn btn-primary" onclick="app.step(1)">${s==5?'پایان':'بعدی'}</button></div>`;
             }
 
-            // --- توابع منطقی و AI ---
-            
-            // پر کردن خودکار بریف با فایل
+            // --- AI ACTIONS (Fixed) ---
             async autoFillBrief() {
                 const f = document.getElementById('bf-file').files[0];
-                if(!f) return alert('فایلی انتخاب نشده است');
-                
+                if(!f) return alert('فایل انتخاب نشده');
                 let txt = "";
                 try {
                     if(f.type === 'application/pdf') {
-                        const ab = await f.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument(ab).promise;
-                        for(let i=1; i<=pdf.numPages; i++) {
-                            const p = await pdf.getPage(i);
-                            const c = await p.getTextContent();
-                            txt += c.items.map(s => s.str).join(' ') + '\n';
-                        }
-                    } else {
-                        txt = await f.text();
-                    }
-                } catch(e) { return alert('خطا در خواندن فایل: ' + e.message); }
+                        const ab = await f.arrayBuffer(); const pdf = await pdfjsLib.getDocument(ab).promise;
+                        for(let i=1; i<=pdf.numPages; i++){ const p=await pdf.getPage(i); const c=await p.getTextContent(); txt+=c.items.map(s=>s.str).join(' ')+'\n'; }
+                    } else txt = await f.text();
+                } catch(e) { return alert('خطا در خواندن فایل'); }
 
-                const prompt = `Extract brand info from text. Return JSON: {"name":"Brand Name", "tone":"Tone of Voice", "aud":"Target Audience", "desc":"Short Description"}. Text: ${txt.substring(0,3000)}`;
+                const prompt = `Extract brand info from text. JSON: {"name":"", "tone":"", "aud":"", "desc":""}. Text: ${txt.substring(0,3000)}`;
                 const res = await this.callAI(prompt, true);
-                
                 try {
                     const j = JSON.parse(this.cleanJSON(res));
-                    document.getElementById('bf-name').value = j.name || '';
-                    document.getElementById('bf-tone').value = j.tone || '';
-                    document.getElementById('bf-aud').value = j.aud || '';
-                    document.getElementById('bf-desc').value = j.desc || '';
-                } catch(e) { alert('فرمت پاسخ AI صحیح نبود.'); }
+                    document.getElementById('bf-name').value = j.name||''; document.getElementById('bf-tone').value = j.tone||'';
+                    document.getElementById('bf-aud').value = j.aud||''; document.getElementById('bf-desc').value = j.desc||'';
+                } catch(e) { alert('فرمت پاسخ نامعتبر'); }
             }
 
-            // خواندن فایل برای مغز
-            async handleFile(e) {
-                const f = e.target.files[0]; if(!f) return;
-                this.state.loading = true; this.render();
-                try {
-                    let t = "";
-                    if(f.type === 'application/pdf') {
-                        const a = await f.arrayBuffer(); const p = await pdfjsLib.getDocument(a).promise;
-                        for(let i=1; i<=p.numPages; i++){ const g = await p.getPage(i); const c = await g.getTextContent(); t += c.items.map(s=>s.str).join(' ')+'\n'; }
-                    } else t = await f.text();
-                    document.getElementById('br-text').value = t;
-                    if(!document.getElementById('br-title').value) document.getElementById('br-title').value = f.name;
-                } catch(err) { alert('خطا در فایل'); }
-                this.state.loading = false; this.render();
-            }
-
-            // اتصال به AI (یونیورسال)
-            async callAI(prompt, jsonMode = false) {
-                const prov = this.state.provider;
-                let sys = `ROLE: Marketer. Platform:${this.state.activeProj?.plat||'General'}. Brand:${this.state.activeBrief?.name||''}. Tone:${this.state.activeBrief?.tone||''}.\nKnowledge:\n`;
-                this.state.brain.forEach(d => sys += `[${d.title}]: ${d.content.substring(0,600)}...\n`);
-                if(jsonMode) sys += "RETURN ONLY VALID JSON.";
-
-                try {
-                    let u, h, b;
-                    if(prov === 'gemini') {
-                        u = `https://generativelanguage.googleapis.com/v1beta/models/${this.state.geminiModel}:generateContent?key=${this.state.geminiKey}`;
-                        h = {'Content-Type': 'application/json'};
-                        b = JSON.stringify({ contents: [{ parts: [{ text: sys + "\nTask: " + prompt }] }] });
-                    } else {
-                        // حذف اسلش آخر اگر هست
-                        const base = this.state.customUrl.replace(/\/$/, "");
-                        u = `${base}/chat/completions`;
-                        h = {'Content-Type': 'application/json', 'Authorization': `Bearer ${this.state.customKey}`};
-                        b = JSON.stringify({
-                            model: this.state.customModel,
-                            messages: [{ role: 'system', content: sys }, { role: 'user', content: prompt }]
-                        });
-                    }
-
-                    const r = await fetch(u, { method: 'POST', headers: h, body: b });
-                    if(!r.ok) return "ERR: " + r.status;
-                    const j = await r.json();
-                    
-                    if(j.error) return "ERR: " + j.error.message;
-                    return prov === 'gemini' ? j.candidates[0].content.parts[0].text : j.choices[0].message.content;
-
-                } catch(e) { return "ERR: Network " + e.message; }
-            }
-
-            cleanJSON(t) { return t.replace(/```json/g,'').replace(/```/g,'').trim().match(/\{[\s\S]*\}/)?.[0] || t; }
-
-            // تحلیل چراغ راهنما
-            async analyze() {
-                const b = document.getElementById('b-anlz');
-                b.innerText = 'درحال تحلیل...'; b.disabled = true;
+            async refineContent() {
+                const d=this.state.temp;
+                if(!d.cf) return alert('ابتدا متن را بنویسید');
+                const cont = document.getElementById('f-cont');
+                const oldHTML = cont.innerHTML;
+                cont.innerHTML = '<div class="flicker text-accent">درحال بهبود متن...</div>';
                 
+                let inputs = ""; Object.entries(d.cf).forEach(([k,v]) => inputs += `${k}: ${v}\n`);
+                const p = `Refine this content to be more engaging. Framework: ${d.tmpl}. Inputs:\n${inputs}\nReturn JSON with keys matching input keys.`;
+                const r = await this.callAI(p, true);
+                
+                try {
+                    const j = JSON.parse(this.cleanJSON(r));
+                    Object.keys(j).forEach(k => { if(d.cf[k]) d.cf[k] = j[k]; });
+                    this.render(); // Re-render to show updated text
+                } catch(e) { 
+                    alert('خطا در بهبود'); 
+                    cont.innerHTML = oldHTML;
+                }
+            }
+
+            async analyze() {
+                const b = document.getElementById('b-anlz'); b.innerText = 'درحال تحلیل...'; b.disabled = true;
                 let t = ""; if(this.state.temp.cf) Object.values(this.state.temp.cf).forEach(v => t += v + "\n");
                 
-                const p = `Audit this ad content: "${t}".
+                const p = `Audit ad copy: "${t}".
                 Evaluate: Hook, Value, CTA, Tone.
-                Return JSON: {"hook":"green/yellow/red", "value":"green/yellow/red", "cta":"green/yellow/red", "tone":"green/yellow/red", "summary":"Short persian feedback"}`;
+                Return JSON: {"hook":"green/yellow/red", "value":"green/yellow/red", "cta":"green/yellow/red", "tone":"green/yellow/red", 
+                "strengths":["..."], "weaknesses":["..."], "suggestions":["..."]}`;
                 
                 const res = await this.callAI(p, true);
                 let html = "";
                 
                 try {
                     const j = JSON.parse(this.cleanJSON(res));
-                    const labels = {hook:'قدرت هوک', value:'ارزش پیشنهادی', cta:'شفافیت CTA', tone:'لحن برند'};
-                    ['hook','value','cta','tone'].forEach(k => {
-                        html += `<div class="checklist-item"><span>${labels[k]}</span><div class="light ${j[k]||'red'}"></div></div>`;
-                    });
-                    html += `<div style="margin-top:15px; font-size:0.9rem; color:#ccc">${j.summary||''}</div>`;
-                } catch(e) { html = "خطا در تحلیل"; }
+                    // Traffic Lights
+                    const labels = {hook:'قدرت هوک', value:'ارزش', cta:'CTA', tone:'لحن'};
+                    ['hook','value','cta','tone'].forEach(k => html += `<div class="checklist-item"><span>${labels[k]}</span><div class="light ${j[k]||'red'}"></div></div>`);
+                    
+                    // Detailed Feedback
+                    html += `<div style="background:#111; padding:15px; border-radius:8px; margin-top:15px">
+                        <strong class="text-accent">متن شما:</strong>
+                        <p style="font-size:0.8rem; color:#aaa; margin-top:5px; white-space:pre-wrap; border-left:2px solid #444; padding-left:10px">${t}</p>
+                    </div>`;
+                    
+                    if(j.strengths) html += `<div class="analysis-box" style="border-right-color:var(--light-green)"><h4 style="color:var(--light-green)">نقاط قوت</h4><ul>${j.strengths.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
+                    if(j.weaknesses) html += `<div class="analysis-box" style="border-right-color:var(--light-red)"><h4 style="color:var(--light-red)">نقاط ضعف</h4><ul>${j.weaknesses.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
+                    if(j.suggestions) html += `<div class="analysis-box" style="border-right-color:var(--light-yellow)"><h4 style="color:var(--light-yellow)">پیشنهادات</h4><ul>${j.suggestions.map(s=>`<li>${s}</li>`).join('')}</ul></div>`;
+
+                } catch(e) { html = "خطا در تحلیل: " + res; }
 
                 const div = document.getElementById('check-res');
                 div.innerHTML = html; div.classList.remove('hidden');
                 b.innerText = 'تحلیل مجدد'; b.disabled = false;
             }
 
-            // سایر توابع ساده
+            // --- STANDARD FUNCTIONS ---
+            addBrief(){const n=document.getElementById('bf-name').value;if(n){this.state.briefs.push({id:Date.now().toString(),name:n,desc:document.getElementById('bf-desc').value,aud:document.getElementById('bf-aud').value,tone:document.getElementById('bf-tone').value});this.saveStores();this.render();}}
+            delBrief(id){this.state.briefs=this.state.briefs.filter(b=>b.id!==id);this.saveStores();this.render();}
+            async handleFile(e){const f=e.target.files[0]; if(!f)return; this.state.loading=true; this.render(); try{let t=""; if(f.type=='application/pdf'){const a=await f.arrayBuffer(),p=await pdfjsLib.getDocument(a).promise;for(let i=1;i<=p.numPages;i++){const g=await p.getPage(i),c=await g.getTextContent();t+=c.items.map(s=>s.str).join(' ')+'\n';}}else t=await f.text(); document.getElementById('br-text').value=t; if(!document.getElementById('br-title').value)document.getElementById('br-title').value=f.name;}catch(e){alert('خطا')}this.state.loading=false;this.render();}
+            addBrain(){const t=document.getElementById('br-title').value,c=document.getElementById('br-text').value;if(t&&c){this.state.brain.push({id:Date.now(),title:t,content:c});this.saveStores();this.render();}}
+            delBrain(id){this.state.brain=this.state.brain.filter(b=>b.id!==id);this.saveStores();this.render();}
+            createProj(){const n=document.getElementById('np-name').value,pl=document.getElementById('np-plat').value; if(n&&this.state.selBrId){this.state.projects.unshift({id:Date.now().toString(),name:n,briefId:this.state.selBrId,plat:pl,data:{}});this.saveStores();this.nav('wizard',this.state.projects[0].id);}}
+            delProj(id){this.state.projects=this.state.projects.filter(p=>p.id!==id);this.saveStores();this.render();}
+            saveStores(){localStorage.setItem('avp_projects',JSON.stringify(this.state.projects));localStorage.setItem('avp_briefs',JSON.stringify(this.state.briefs));localStorage.setItem('avp_brain',JSON.stringify(this.state.brain));}
+            setD(k,v){this.state.temp[k]=v;}
+            setCF(k,v){if(!this.state.temp.cf)this.state.temp.cf={};this.state.temp.cf[k]=v;}
+            step(d){const ns=this.state.step+d; if(ns>5){const i=this.state.projects.findIndex(p=>p.id==this.state.activeProj.id);this.state.projects[i].data={...this.state.temp};this.saveStores();this.nav('home');}else if(ns>=1){this.state.step=ns;this.render();}}
+            copyTo(id){const el=document.getElementById(id);el.select();document.execCommand('copy');alert('کپی شد');}
+
+            async callAI(prompt, jsonMode=false) {
+                const prov = this.state.provider;
+                let sys = `ROLE: Marketer. Platform:${this.state.activeProj?.plat||'General'}. Brand:${this.state.activeBrief?.name||''}. Tone:${this.state.activeBrief?.tone||''}.\nKnowledge:\n`;
+                this.state.brain.forEach(d=>sys+=`${d.title}:${d.content.substring(0,600)}...\n`);
+                if(jsonMode) sys+="RETURN ONLY VALID JSON.";
+                try {
+                    let u, h, b;
+                    if(prov==='gemini') { u=`https://generativelanguage.googleapis.com/v1beta/models/${this.state.geminiModel}:generateContent?key=${this.state.geminiKey}`; h={'Content-Type':'application/json'}; b=JSON.stringify({contents:[{parts:[{text:sys+"\nTask: "+prompt}]}]}); }
+                    else { u=`${this.state.customUrl.replace(/\/$/,'')}/chat/completions`; h={'Content-Type':'application/json','Authorization':`Bearer ${this.state.customKey}`}; b=JSON.stringify({model:this.state.customModel,messages:[{role:'system',content:sys},{role:'user',content:prompt}]}); }
+                    const r=await fetch(u,{method:'POST',headers:h,body:b}); if(!r.ok) return "ERR: "+r.status; const j=await r.json(); if(j.error) return "ERR: "+j.error.message;
+                    return prov==='gemini' ? j.candidates[0].content.parts[0].text : j.choices[0].message.content;
+                } catch(e) { return "ERR: "+e.message; }
+            }
+            cleanJSON(t) { return t.replace(/```json/g,'').replace(/```/g,'').trim().match(/\{[\s\S]*\}/)?.[0] || t; }
             async autoFill() {
                 const d=this.state.temp, tmpl=FRAMEWORKS[d.tmpl||'AIDA'];
                 document.getElementById('f-cont').innerHTML='<div class="flicker text-accent">درحال نوشتن...</div>';
@@ -702,16 +422,6 @@
                 const res=await this.callAI(`Write caption for: ${t}. Add hashtags.`, false);
                 this.state.temp.cap=res; document.getElementById('fcap').value=res; b.innerText='کپشن'; b.disabled=false;
             }
-            addBrief(){const n=document.getElementById('bf-name').value;if(n){this.state.briefs.push({id:Date.now().toString(),name:n,desc:document.getElementById('bf-desc').value,aud:document.getElementById('bf-aud').value,tone:document.getElementById('bf-tone').value});this.saveStores();this.render();}}
-            delBrief(id){this.state.briefs=this.state.briefs.filter(b=>b.id!==id);this.saveStores();this.render();}
-            addBrain(){const t=document.getElementById('br-title').value,c=document.getElementById('br-text').value;if(t&&c){this.state.brain.push({id:Date.now(),title:t,content:c});this.saveStores();this.render();}}
-            delBrain(id){this.state.brain=this.state.brain.filter(b=>b.id!==id);this.saveStores();this.render();}
-            createProj(){const n=document.getElementById('np-name').value,pl=document.getElementById('np-plat').value;if(n&&this.state.selBrId){this.state.projects.unshift({id:Date.now().toString(),name:n,briefId:this.state.selBrId,plat:pl,data:{}});this.saveStores();this.nav('wizard',this.state.projects[0].id);}}
-            delProj(id){this.state.projects=this.state.projects.filter(p=>p.id!==id);this.saveStores();this.render();}
-            saveStores(){localStorage.setItem('avp_projects',JSON.stringify(this.state.projects));localStorage.setItem('avp_briefs',JSON.stringify(this.state.briefs));localStorage.setItem('avp_brain',JSON.stringify(this.state.brain));}
-            setD(k,v){this.state.temp[k]=v;}
-            setCF(k,v){if(!this.state.temp.cf)this.state.temp.cf={};this.state.temp.cf[k]=v;}
-            step(d){const ns=this.state.step+d; if(ns>5){const i=this.state.projects.findIndex(p=>p.id==this.state.activeProj.id);this.state.projects[i].data={...this.state.temp};this.saveStores();this.nav('home');}else if(ns>=1){this.state.step=ns;this.render();}}
         }
         const app = new App();
     </script>
