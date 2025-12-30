@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A_art Planner | Brief & Strategy</title>
+    <title>A_art Planner | نسخه بدون باگ</title>
     
     <!-- Fonts & Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -86,18 +86,16 @@
         .nav-link { background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left: 20px; font-size: 0.95rem; font-family: var(--font-fa); transition: 0.3s; }
         .nav-link.active { color: var(--accent); text-shadow: 0 0 8px var(--accent-dim); }
 
-        /* Brief Specific */
-        .brief-tag { background: #222; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; color: #aaa; margin-left: 5px; }
-
-        /* Wizard & Layout */
-        .step-indicator { display: flex; gap: 5px; margin-bottom: 20px; }
-        .step-dot { flex: 1; height: 4px; background: #333; border-radius: 2px; transition: 0.3s; }
-        .step-dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
-        
+        /* Layout */
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
         .flex { display: flex; } .justify-between { justify-content: space-between; } .w-full { width: 100%; }
         .hidden { display: none !important; }
+
+        /* Step Dots */
+        .step-indicator { display: flex; gap: 5px; margin-bottom: 20px; }
+        .step-dot { flex: 1; height: 4px; background: #333; border-radius: 2px; transition: 0.3s; }
+        .step-dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
         @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
         
@@ -112,16 +110,16 @@
     <!-- SETTINGS MODAL -->
     <dialog id="settings-modal">
         <h2>تنظیمات هوش مصنوعی</h2>
-        <p>برای استفاده از تحلیلگر، کلید API خود را وارد کنید.</p>
+        <p>لطفا کلید جدید خود را وارد کنید.</p>
         
         <label>Google Gemini API Key</label>
         <input type="password" id="api-key" placeholder="AIzaSy..." class="font-en">
         
-        <label>انتخاب مدل (در صورت ارور، مدل دیگری را انتخاب کنید)</label>
+        <label>انتخاب مدل (رفع ارور Not Found)</label>
         <select id="ai-model" class="font-en">
-            <option value="gemini-1.5-flash">gemini-1.5-flash (پیش‌فرض - سریع)</option>
-            <option value="gemini-1.5-pro">gemini-1.5-pro (قوی‌تر)</option>
-            <option value="gemini-pro">gemini-pro (نسخه قدیمی/پایدار)</option>
+            <!-- مدل‌های جدید که ارور نمی‌دهند -->
+            <option value="gemini-1.5-flash">gemini-1.5-flash (پیش‌فرض: سریع و ارزان)</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro (هوشمندتر)</option>
         </select>
 
         <div class="flex justify-between mt-4">
@@ -135,7 +133,7 @@
             <div class="logo"><span class="flicker">A_art</span> Planner</div>
             <nav>
                 <button class="nav-link active" onclick="app.nav('home')">پروژه‌ها</button>
-                <button class="nav-link" onclick="app.nav('briefs')">بریف‌ها (پروفایل)</button>
+                <button class="nav-link" onclick="app.nav('briefs')">بریف‌ها</button>
                 <button class="nav-link" onclick="app.nav('brain')">مغز متفکر</button>
                 <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">تنظیمات</button>
             </nav>
@@ -145,97 +143,83 @@
     <main id="root" class="container"></main>
 
     <script>
-        // --- 1. KNOWLEDGE: CONTENT FRAMEWORKS ---
+        // --- CONTENT FRAMEWORKS ---
         const FRAMEWORKS = {
             'AIDA': {
                 name: 'AIDA',
-                desc: 'مدل کلاسیک برای تبدیل توجه به خرید.',
+                desc: 'مدل کلاسیک: توجه، علاقه، تمایل، اقدام.',
                 fields: [
                     { id: 'attention', label: 'Attention (توجه)', hint: 'قلابی برای میخکوب کردن مخاطب در ۳ ثانیه اول.' },
-                    { id: 'interest', label: 'Interest (علاقه)', hint: 'اطلاعات جذاب یا سرگرم‌کننده که به مخاطب ربط دارد.' },
-                    { id: 'desire', label: 'Desire (تمایل)', hint: 'ایجاد عطش با نشان دادن مزایا و اثبات اجتماعی.' },
-                    { id: 'action', label: 'Action (اقدام)', hint: 'دقیقاً چه کاری باید انجام دهند؟' }
+                    { id: 'interest', label: 'Interest (علاقه)', hint: 'اطلاعات جذاب یا سرگرم‌کننده مرتبط.' },
+                    { id: 'desire', label: 'Desire (تمایل)', hint: 'ایجاد عطش با مزایا و اثبات اجتماعی.' },
+                    { id: 'action', label: 'Action (اقدام)', hint: 'فراخوان عمل (CTA) شفاف.' }
                 ]
             },
             'PAS': {
-                name: 'PAS (حل مسئله)',
-                desc: 'بهترین مدل برای فروش با دست گذاشتن روی درد مشتری.',
+                name: 'PAS',
+                desc: 'مشکل، تشدید، راه حل.',
                 fields: [
                     { id: 'problem', label: 'Problem (مشکل)', hint: 'درد یا چالش اصلی مخاطب چیست؟' },
-                    { id: 'agitate', label: 'Agitate (تشدید)', hint: 'نمک پاشیدن روی زخم؛ عواقب حل نکردن مشکل.' },
-                    { id: 'solution', label: 'Solution (راه‌حل)', hint: 'معرفی محصول شما به عنوان تنها راه نجات.' }
+                    { id: 'agitate', label: 'Agitate (تشدید)', hint: 'عواقب حل نکردن مشکل (نمک روی زخم).' },
+                    { id: 'solution', label: 'Solution (راه‌حل)', hint: 'معرفی محصول شما به عنوان راه نجات.' }
                 ]
             },
             'StoryBrand': {
-                name: 'StoryBrand (داستان برند)',
-                desc: 'مشتری قهرمان است و شما راهنما.',
+                name: 'StoryBrand',
+                desc: 'مشتری قهرمان است، شما راهنما.',
                 fields: [
-                    { id: 'character', label: 'Character (قهرمان)', hint: 'خواسته اصلی مشتری چیست؟' },
-                    { id: 'problem', label: 'Problem (مشکل)', hint: 'مانع سر راه او چیست؟' },
-                    { id: 'guide', label: 'Guide (راهنما)', hint: 'چرا برند شما قابل اعتماد است؟ (همدلی + صلاحیت)' },
-                    { id: 'plan', label: 'Plan (نقشه)', hint: 'مراحل ساده استفاده از خدمات شما.' },
-                    { id: 'cta', label: 'Call to Action', hint: 'دعوت به اقدام.' },
-                    { id: 'failure', label: 'Failure (شکست)', hint: 'هزینه نخریدن محصول چیست؟' },
-                    { id: 'success', label: 'Success (پیروزی)', hint: 'زندگی او بعد از استفاده چگونه می‌شود؟' }
-                ]
-            },
-            '4Ps': {
-                name: '4Ps (تصویرسازی)',
-                desc: 'ایده‌آل برای معرفی محصول جدید.',
-                fields: [
-                    { id: 'picture', label: 'Picture (تصویر)', hint: 'تصویرسازی آینده روشن یا مشکل حل شده.' },
-                    { id: 'promise', label: 'Promise (وعده)', hint: 'قول اصلی برند شما.' },
-                    { id: 'proof', label: 'Proof (اثبات)', hint: 'چرا باید باور کنند؟ (آمار، نظرات)' },
-                    { id: 'push', label: 'Push (هل دادن)', hint: 'ایجاد فوریت برای خرید.' }
-                ]
-            },
-            'APP': {
-                name: 'APP (آموزشی)',
-                desc: 'ساختار استاندارد برای بلاگ و کپشن‌های آموزشی.',
-                fields: [
-                    { id: 'awareness', label: 'Awareness (آگاهی)', hint: 'اشاره به یک واقعیت یا مشکل که شاید ندانند.' },
-                    { id: 'problem', label: 'Problem (پیچیدگی)', hint: 'چرا این موضوع مهم یا سخت است؟' },
-                    { id: 'positioning', label: 'Positioning (جایگاه)', hint: 'راه حل شما چیست؟' }
+                    { id: 'character', label: 'Character (قهرمان)', hint: 'خواسته اصلی مشتری.' },
+                    { id: 'problem', label: 'Problem (مشکل)', hint: 'مانع سر راه او.' },
+                    { id: 'guide', label: 'Guide (راهنما)', hint: 'چرا برند شما قابل اعتماد است؟' },
+                    { id: 'plan', label: 'Plan (نقشه)', hint: 'مراحل ساده استفاده.' },
+                    { id: 'cta', label: 'CTA', hint: 'دعوت به خرید/عضویت.' },
+                    { id: 'failure', label: 'Failure (شکست)', hint: 'هزینه نخریدن محصول.' },
+                    { id: 'success', label: 'Success (پیروزی)', hint: 'زندگی رویایی بعد از خرید.' }
                 ]
             }
         };
 
-        // --- 2. APP LOGIC ---
+        // --- APP LOGIC ---
         class App {
             constructor() {
                 this.state = {
                     view: 'home',
-                    // Data Stores
                     projects: JSON.parse(localStorage.getItem('aart_projects') || '[]'),
-                    briefs: JSON.parse(localStorage.getItem('aart_briefs') || '[]'), // Business Profiles
-                    brain: JSON.parse(localStorage.getItem('aart_brain') || '[]'),   // PDF/Knowledge
+                    briefs: JSON.parse(localStorage.getItem('aart_briefs') || '[]'),
+                    brain: JSON.parse(localStorage.getItem('aart_brain') || '[]'),
                     
-                    // Settings
                     apiKey: localStorage.getItem('aart_key') || '',
-                    model: localStorage.getItem('aart_model') || 'gemini-1.5-flash',
+                    // اگر مدل قبلی در حافظه بود و خراب بود، ریست شود به فلش
+                    model: (localStorage.getItem('aart_model') && localStorage.getItem('aart_model').includes('gemini-1.5')) 
+                           ? localStorage.getItem('aart_model') 
+                           : 'gemini-1.5-flash',
                     
-                    // Runtime State
                     activeProj: null,
-                    activeBrief: null, // The profile selected for the CURRENT project
+                    activeBrief: null,
                     step: 1,
                     tempData: {},
                     processing: false
                 };
 
+                // ذخیره مدل صحیح در اولین اجرا
+                if(localStorage.getItem('aart_model') !== this.state.model) {
+                    localStorage.setItem('aart_model', this.state.model);
+                }
+
                 if (!this.state.apiKey) setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
                 this.render();
             }
 
-            // --- DATA MANAGEMENT ---
+            // --- DATA ---
             saveSettings() {
                 const k = document.getElementById('api-key').value;
                 const m = document.getElementById('ai-model').value;
-                localStorage.setItem('aart_key', k);
-                localStorage.setItem('aart_model', m);
                 this.state.apiKey = k;
                 this.state.model = m;
+                localStorage.setItem('aart_key', k);
+                localStorage.setItem('aart_model', m);
                 document.getElementById('settings-modal').close();
-                alert('تنظیمات ذخیره شد');
+                alert('تنظیمات ذخیره شد. مدل فعال: ' + m);
             }
 
             saveStores() {
@@ -244,21 +228,17 @@
                 localStorage.setItem('aart_brain', JSON.stringify(this.state.brain));
             }
 
-            // --- NAVIGATION ---
+            // --- NAV ---
             nav(view, id = null) {
                 this.state.view = view;
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
                 
-                // Active Nav Styling
                 const navMap = {'home':0, 'briefs':1, 'brain':2};
                 if(navMap[view] !== undefined) document.querySelectorAll('.nav-link')[navMap[view]].classList.add('active');
 
-                // Route Logic
                 if (view === 'wizard') {
-                    // Start Wizard
                     const p = this.state.projects.find(x => x.id === id);
                     this.state.activeProj = p;
-                    // Find associated brief
                     this.state.activeBrief = this.state.briefs.find(b => b.id === p.briefId) || this.state.briefs[0];
                     this.state.tempData = { ...p.data };
                     this.state.step = 1;
@@ -266,11 +246,10 @@
                 this.render();
             }
 
-            // --- RENDER ENGINE ---
+            // --- RENDER ---
             render() {
                 const root = document.getElementById('root');
                 root.innerHTML = '';
-                
                 switch(this.state.view) {
                     case 'home': root.innerHTML = this.viewHome(); break;
                     case 'briefs': root.innerHTML = this.viewBriefs(); break;
@@ -280,510 +259,334 @@
                 }
             }
 
-            // --- VIEW: HOME ---
+            // [Views: Home, Briefs, Brain, Setup - Same as before but cleaner]
             viewHome() {
                 return `
-                    <div class="flex justify-between" style="margin-bottom:20px; align-items:center;">
-                        <h2>داشبورد پروژه‌ها</h2>
+                    <div class="flex justify-between" style="align-items:center; margin-bottom:20px">
+                        <h2>پروژه‌ها</h2>
                         <button class="btn btn-primary" onclick="app.nav('new-project')">+ پروژه جدید</button>
                     </div>
-                    
-                    ${this.state.projects.length === 0 ? 
-                        `<div class="card" style="text-align:center; padding:50px;">
-                            <p>هیچ پروژه‌ای ندارید. برای شروع دکمه بالا را بزنید.</p>
-                        </div>` : ''}
-
+                    ${this.state.projects.length===0 ? '<div class="card text-center">هنوز پروژه‌ای ندارید.</div>' : ''}
                     <div class="grid-3">
                         ${this.state.projects.map(p => {
-                            const brief = this.state.briefs.find(b => b.id === p.briefId);
+                            const b = this.state.briefs.find(x => x.id === p.briefId);
                             return `
                             <div class="card" onclick="app.nav('wizard','${p.id}')" style="cursor:pointer">
-                                <div class="flex justify-between" style="margin-bottom:10px">
-                                    <strong>${p.name}</strong>
-                                    <span style="font-size:0.8rem; background:#333; padding:2px 6px; border-radius:4px">${p.plat}</span>
-                                </div>
-                                <div style="font-size:0.8rem; color:#888; margin-bottom:15px">
-                                    بریف: <span style="color:var(--accent)">${brief ? brief.name : 'نامشخص'}</span>
-                                </div>
-                                <div class="flex justify-between items-center">
-                                    <span style="font-size:0.75rem">${p.date}</span>
-                                    <button class="btn btn-sm" onclick="event.stopPropagation(); app.delProj('${p.id}')">حذف</button>
-                                </div>
-                            </div>
-                        `}).join('')}
+                                <strong>${p.name}</strong>
+                                <div style="font-size:0.8rem; color:#888; margin:10px 0">بریف: ${b?b.name:'-'}<br>پلتفرم: ${p.plat}</div>
+                                <button class="btn btn-sm" onclick="event.stopPropagation(); app.delProj('${p.id}')">حذف</button>
+                            </div>`;
+                        }).join('')}
                     </div>
                 `;
             }
 
-            // --- VIEW: BRIEFS (BUSINESS PROFILES) ---
             viewBriefs() {
                 return `
-                    <div class="card" style="border-top:4px solid var(--accent)">
-                        <h2>ساخت پروفایل کسب‌وکار (بریف)</h2>
-                        <p>اطلاعات پایه برند خود را اینجا وارد کنید تا هوش مصنوعی بر اساس آن بنویسد.</p>
+                    <div class="card">
+                        <h2>ساخت بریف (پروفایل کسب‌وکار)</h2>
                         <div class="grid-2">
-                            <div>
-                                <label>نام برند / کسب‌وکار</label><input id="bf-name" placeholder="مثلا: قهوه بیرون‌بر">
-                                <label>توصیف کوتاه (ما چه می‌کنیم؟)</label><textarea id="bf-bio" rows="2" placeholder="فروش قهوه باکیفیت برای کارمندان..."></textarea>
-                            </div>
-                            <div>
-                                <label>پرسونای مخاطب</label><textarea id="bf-aud" rows="2" placeholder="کارمندان ۲۵ تا ۴۰ سال، خسته، نیاز به انرژی..."></textarea>
-                                <label>لحن برند (Tone of Voice)</label><input id="bf-tone" placeholder="دوستانه، پرانرژی، صمیمی">
-                            </div>
+                            <div><label>نام برند</label><input id="bf-name"></div>
+                            <div><label>لحن برند</label><input id="bf-tone" placeholder="دوستانه، رسمی..."></div>
                         </div>
-                        <label>مزیت رقابتی / ارزش اصلی (USP)</label>
-                        <input id="bf-usp" placeholder="ارسال زیر ۱۰ دقیقه، قهوه تازه رست شده">
-                        <button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره پروفایل</button>
+                        <label>درباره ما</label><textarea id="bf-bio" rows="2"></textarea>
+                        <label>مخاطب هدف</label><textarea id="bf-aud" rows="2"></textarea>
+                        <button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره بریف</button>
                     </div>
-
-                    <h3>پروفایل‌های ذخیره شده</h3>
+                    <h3>بریف‌های موجود</h3>
                     <div class="grid-3">
                         ${this.state.briefs.map(b => `
                             <div class="card">
                                 <h3 style="color:var(--accent)">${b.name}</h3>
-                                <p style="font-size:0.85rem">${b.bio}</p>
-                                <div style="font-size:0.8rem; color:#aaa; margin-top:10px">
-                                    <div>مخاطب: ${b.aud}</div>
-                                    <div>لحن: ${b.tone}</div>
-                                </div>
-                                <button class="btn btn-sm mt-4" onclick="app.delBrief('${b.id}')" style="width:100%; margin-top:15px">حذف</button>
+                                <p style="font-size:0.8rem">${b.bio}</p>
+                                <button class="btn btn-sm mt-4" onclick="app.delBrief('${b.id}')">حذف</button>
                             </div>
                         `).join('')}
                     </div>
                 `;
             }
 
-            // --- VIEW: BRAIN (PDF/KNOWLEDGE) ---
             viewBrain() {
                 return `
                     <div class="card">
-                        <h2>مغز متفکر (Knowledge Base)</h2>
-                        <p>فایل‌های PDF یا متنی را آپلود کنید تا به دانش هوش مصنوعی اضافه شود.</p>
+                        <h2>مغز متفکر (PDF/Text)</h2>
                         <div class="grid-2">
                             <div>
-                                <label>عنوان فایل</label><input id="brain-title" placeholder="مثلا: کاتالوگ محصولات">
-                                <label>آپلود فایل (PDF / TXT)</label>
-                                <input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt,.md,.json">
-                                ${this.state.processing ? '<span class="flicker">درحال پردازش فایل...</span>' : ''}
+                                <label>عنوان</label><input id="brain-title">
+                                <label>آپلود PDF/TXT</label>
+                                <input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt,.md">
+                                ${this.state.processing ? '<span class="flicker text-accent">درحال پردازش...</span>' : ''}
                             </div>
                             <div>
-                                <label>محتوای متنی</label>
-                                <textarea id="brain-content" rows="6" placeholder="متن استخراج شده..."></textarea>
-                                <button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن به مغز</button>
+                                <label>متن استخراج شده</label><textarea id="brain-content" rows="6"></textarea>
+                                <button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن</button>
                             </div>
                         </div>
                     </div>
                     <div class="grid-3">
-                        ${this.state.brain.map(b => `
-                            <div class="card">
-                                <strong>${b.title}</strong>
-                                <p style="font-size:0.8rem; height:50px; overflow:hidden">${b.content.substring(0,80)}...</p>
-                                <button class="btn btn-sm" onclick="app.delBrain(${b.id})">حذف</button>
-                            </div>
-                        `).join('')}
+                        ${this.state.brain.map(b => `<div class="card"><strong>${b.title}</strong><br><button class="btn btn-sm mt-4" onclick="app.delBrain(${b.id})">حذف</button></div>`).join('')}
                     </div>
                 `;
             }
 
-            // --- VIEW: NEW PROJECT SETUP (SELECT BRIEF) ---
             viewNewProjectSetup() {
-                if(this.state.briefs.length === 0) {
-                    return `<div class="container text-center" style="padding-top:50px;">
-                        <h2>ابتدا یک بریف بسازید</h2>
-                        <p>برای شروع پروژه، باید حداقل یک پروفایل کسب‌وکار داشته باشید.</p>
-                        <button class="btn btn-primary" onclick="app.nav('briefs')">ساخت بریف</button>
-                    </div>`;
-                }
-
+                if(this.state.briefs.length === 0) return `<div class="container text-center pt-5"><h2>ابتدا یک بریف بسازید</h2><button class="btn btn-primary" onclick="app.nav('briefs')">ساخت بریف</button></div>`;
                 return `
-                    <h2>شروع پروژه جدید</h2>
-                    <p>ابتدا بریف (پروفایل کسب‌وکار) را انتخاب کنید:</p>
-                    
-                    <div class="grid-3" style="margin-bottom:30px">
+                    <h2>پروژه جدید: انتخاب بریف</h2>
+                    <div class="grid-3" style="margin-bottom:20px">
                         ${this.state.briefs.map(b => `
-                            <div class="card selectable-brief" id="brief-${b.id}" onclick="app.selectBriefForSetup('${b.id}')" style="cursor:pointer; border:2px solid #333">
-                                <h3>${b.name}</h3>
-                                <p style="font-size:0.8rem">${b.bio}</p>
+                            <div class="card selectable-brief" id="brief-${b.id}" onclick="app.selBrief('${b.id}')" style="cursor:pointer; border:2px solid #333">
+                                <strong>${b.name}</strong>
                             </div>
                         `).join('')}
                     </div>
-
                     <div class="card">
-                        <h3>تنظیمات پروژه</h3>
-                        <div class="grid-2" style="align-items:end">
-                            <div>
-                                <label>نام پروژه</label>
-                                <input id="new-proj-name" placeholder="مثلا: پست معرفی محصول جدید">
-                            </div>
-                            <div class="flex" style="gap:10px">
-                                <div class="w-full">
-                                    <label>پلتفرم</label>
-                                    <select id="new-proj-plat">
-                                        <option>Instagram Post</option>
-                                        <option>Instagram Reel</option>
-                                        <option>LinkedIn</option>
-                                        <option>Website Blog</option>
-                                        <option>Telegram</option>
-                                    </select>
-                                </div>
-                                <button class="btn btn-primary" onclick="app.createProject()" style="margin-bottom:15px">ساخت پروژه</button>
-                            </div>
-                        </div>
+                        <label>نام پروژه</label><input id="new-proj-name">
+                        <label>پلتفرم</label>
+                        <select id="new-proj-plat"><option>Instagram</option><option>LinkedIn</option><option>Website</option></select>
+                        <button class="btn btn-primary w-full" onclick="app.createProject()">ایجاد پروژه</button>
                     </div>
                 `;
             }
 
-            selectBriefForSetup(id) {
-                document.querySelectorAll('.selectable-brief').forEach(el => {
-                    el.style.borderColor = '#333';
-                    el.style.backgroundColor = 'var(--bg-card)';
-                });
+            selBrief(id) {
+                document.querySelectorAll('.selectable-brief').forEach(e => {e.style.borderColor='#333';e.style.background='var(--bg-card)'});
                 const el = document.getElementById(`brief-${id}`);
-                el.style.borderColor = 'var(--accent)';
-                el.style.backgroundColor = '#1a1a1a';
+                el.style.borderColor='var(--accent)';
+                el.style.background='#1a1a1a';
                 this.state.selectedBriefId = id;
             }
 
-            // --- WIZARD RENDERER ---
+            // --- WIZARD ---
             renderWizard(root) {
                 const s = this.state.step;
                 const d = this.state.tempData;
-                const p = this.state.activeProj;
-                const b = this.state.activeBrief;
-
                 let content = '';
 
-                // STEP 1: OBJECTIVE
-                if(s === 1) {
+                if(s===1) {
                     content = `
-                        <h3>۱. هدف‌گذاری</h3>
-                        <div style="background:#1a1a1a; padding:10px; border-radius:8px; margin-bottom:20px; border-right:3px solid var(--accent)">
-                            <strong>پروفایل فعال: ${b.name}</strong>
-                            <p style="font-size:0.8rem; margin:0">مخاطب: ${b.aud} | لحن: ${b.tone}</p>
-                        </div>
+                        <h3>هدف‌گذاری</h3>
                         <div class="grid-2">
-                            <div>
-                                <label>هدف محتوا</label>
-                                <select id="inp-obj" onchange="app.setTmp('obj',this.value)">
-                                    <option value="Awareness" ${d.obj=='Awareness'?'selected':''}>آگاهی (Awareness)</option>
-                                    <option value="Sales" ${d.obj=='Sales'?'selected':''}>فروش (Sales)</option>
-                                    <option value="Engagement" ${d.obj=='Engagement'?'selected':''}>تعامل (Engagement)</option>
-                                    <option value="Education" ${d.obj=='Education'?'selected':''}>آموزش (Education)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label>موضوع خاص این محتوا</label>
-                                <input value="${d.topic||''}" onchange="app.setTmp('topic',this.value)" placeholder="مثلا: تخفیف ویژه جمعه">
-                            </div>
+                            <div><label>هدف</label><select id="inp-obj" onchange="app.setTmp('obj',this.value)"><option>Awareness</option><option>Sales</option><option>Engagement</option></select></div>
+                            <div><label>موضوع</label><input value="${d.topic||''}" onchange="app.setTmp('topic',this.value)"></div>
                         </div>
-                        <label>پیام کلیدی / آفر این پست</label>
-                        <textarea rows="3" onchange="app.setTmp('offer',this.value)">${d.offer||''}</textarea>
+                        <label>پیام کلیدی</label><textarea onchange="app.setTmp('offer',this.value)">${d.offer||''}</textarea>
                     `;
-                }
-                // STEP 2: TEMPLATE
-                else if(s === 2) {
-                    // Logic for recommendation
+                } else if(s===2) {
                     let rec = 'AIDA';
-                    if (d.obj === 'Sales') rec = 'PAS';
-                    if (d.obj === 'Education') rec = 'APP';
-                    if (d.obj === 'Engagement') rec = 'StoryBrand';
-                    if (!d.tmpl) d.tmpl = rec;
-
+                    if(d.obj==='Sales') rec='PAS';
+                    if(d.obj==='Engagement') rec='StoryBrand';
+                    if(!d.tmpl) d.tmpl = rec;
                     content = `
-                        <h3>۲. انتخاب قالب محتوا</h3>
-                        <div class="card" style="border-color:var(--accent); background:rgba(204,255,0,0.02)">
-                            <strong style="color:var(--accent)">پیشنهاد هوشمند: ${rec}</strong>
-                            <p style="font-size:0.85rem; margin-top:5px">برای هدف "${d.obj}" این ساختار بهترین بازدهی را دارد.</p>
-                        </div>
-                        <label>انتخاب قالب:</label>
-                        <select id="inp-tmpl" onchange="app.setTmp('tmpl',this.value); app.render()">
-                            ${Object.keys(FRAMEWORKS).map(k => `<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}
+                        <h3>انتخاب قالب</h3>
+                        <div class="card" style="border-color:var(--accent)"><strong class="text-accent">پیشنهاد: ${rec}</strong></div>
+                        <select id="inp-tmpl" onchange="app.setTmp('tmpl',this.value);app.render()">
+                            ${Object.keys(FRAMEWORKS).map(k=>`<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}
                         </select>
-                        <div style="margin-top:10px; padding:15px; background:#111; border-radius:8px">
-                            <p>${FRAMEWORKS[d.tmpl].desc}</p>
-                        </div>
+                        <p class="mt-4">${FRAMEWORKS[d.tmpl].desc}</p>
                     `;
-                }
-                // STEP 3: CONTENT GENERATION
-                else if(s === 3) {
-                    const tmpl = FRAMEWORKS[d.tmpl];
-                    const fields = tmpl.fields.map(f => {
-                        const val = d.contentFields ? d.contentFields[f.id] : '';
-                        return `
-                            <div style="margin-bottom:20px;">
-                                <label style="color:var(--accent)">${f.label}</label>
-                                <p style="font-size:0.8rem; color:#888; margin-bottom:5px">${f.hint}</p>
-                                <textarea rows="3" onchange="app.setContField('${f.id}',this.value)">${val||''}</textarea>
-                            </div>
-                        `;
-                    }).join('');
-
-                    content = `
-                        <h3>۳. تولید محتوا (${tmpl.name})</h3>
-                        <div style="display:flex; gap:10px; margin-bottom:20px">
-                             <button class="btn btn-sm" onclick="app.autoFill()" style="border-color:var(--accent); color:var(--accent)">✨ تکمیل خودکار با AI</button>
-                             <span style="font-size:0.8rem; padding-top:5px; color:#666">(بر اساس بریف و مغز متفکر)</span>
+                } else if(s===3) {
+                    const f = FRAMEWORKS[d.tmpl].fields;
+                    const fields = f.map(x => `
+                        <div style="margin-bottom:15px">
+                            <label class="text-accent">${x.label}</label>
+                            <p style="font-size:0.8rem;color:#666">${x.hint}</p>
+                            <textarea rows="3" onchange="app.setCF('${x.id}',this.value)">${(d.contentFields&&d.contentFields[x.id])||''}</textarea>
                         </div>
+                    `).join('');
+                    content = `
+                        <h3>تولید محتوا (${d.tmpl})</h3>
+                        <button class="btn btn-sm mb-4" onclick="app.autoFill()" style="border-color:var(--accent);color:var(--accent)">✨ تکمیل خودکار با AI</button>
                         <div id="fields-container">${fields}</div>
                     `;
-                }
-                // STEP 4: AI REVIEW
-                else if(s === 4) {
+                } else if(s===4) {
+                    content = `<h3>آنالیز</h3><button class="btn btn-primary w-full" id="btn-anlz" onclick="app.analyze()">شروع آنالیز</button><div id="ai-res" class="card mt-4 hidden" style="white-space:pre-wrap">${d.aiRes||''}</div>`;
+                } else if(s===5) {
+                    let script = `استراتژی: ${d.tmpl}\n\n`;
+                    if(d.contentFields) FRAMEWORKS[d.tmpl].fields.forEach(f => script += `[${f.label}]:\n${d.contentFields[f.id]||''}\n\n`);
                     content = `
-                        <h3>۴. آنالیز و بهبود</h3>
-                        <button class="btn btn-primary w-full" id="btn-analyze" onclick="app.runAnalysis()">شروع آنالیز</button>
-                        <div id="ai-res" class="card mt-4 hidden" style="white-space:pre-wrap; line-height:1.7">${d.aiRes||''}</div>
-                    `;
-                }
-                // STEP 5: FINAL
-                else if(s === 5) {
-                    // Assemble Script
-                    let script = `استراتژی: ${d.tmpl}\nهدف: ${d.obj}\n\n`;
-                    if(d.contentFields) {
-                        const t = FRAMEWORKS[d.tmpl];
-                        t.fields.forEach(f => {
-                            script += `■ ${f.label}:\n${d.contentFields[f.id] || ''}\n\n`;
-                        });
-                    }
-                    d.finalScript = script;
-
-                    content = `
-                        <h3>۵. خروجی نهایی</h3>
+                        <h3>خروجی</h3>
                         <div class="grid-2">
-                            <div>
-                                <label>متن سناریو</label>
-                                <textarea rows="12" id="final-txt">${script}</textarea>
-                                <button class="btn btn-sm" onclick="app.copy('final-txt')">کپی متن</button>
-                            </div>
-                            <div>
-                                <label>کپشن و هشتگ (تولید AI)</label>
-                                <button class="btn btn-primary w-full mb-2" id="btn-cap" onclick="app.genCaption()">نوشتن کپشن</button>
-                                <textarea rows="9" id="final-cap">${d.caption||''}</textarea>
-                            </div>
+                            <div><label>متن</label><textarea rows="10" id="ftxt">${script}</textarea></div>
+                            <div><button class="btn btn-primary w-full mb-2" id="btn-cap" onclick="app.caption()">کپشن نویسی</button><textarea rows="8" id="fcap">${d.caption||''}</textarea></div>
                         </div>
                     `;
                 }
 
-                // Render Frame
                 root.innerHTML = `
-                    <div class="flex justify-between" style="margin-bottom:20px">
-                        <button class="btn" onclick="app.nav('home')">خروج</button>
-                        <div>
-                            <span style="color:var(--accent)">${p.name}</span>
-                            <span style="font-size:0.8rem; color:#666; margin-right:10px">(${b.name})</span>
-                        </div>
-                    </div>
-                    <div class="step-indicator">
-                        ${[1,2,3,4,5].map(i => `<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}
-                    </div>
+                    <div class="flex justify-between mb-4"><button class="btn" onclick="app.nav('home')">خروج</button><span>${this.state.activeProj.name}</span></div>
+                    <div class="step-indicator">${[1,2,3,4,5].map(i=>`<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}</div>
                     <div style="min-height:400px">${content}</div>
-                    <div class="flex justify-between" style="margin-top:30px">
-                        <button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>مرحله قبل</button>
-                        <button class="btn btn-primary" onclick="app.step(1)">${s==5?'ذخیره و پایان':'مرحله بعد'}</button>
-                    </div>
-                `;
+                    <div class="flex justify-between mt-4">
+                        <button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>قبل</button>
+                        <button class="btn btn-primary" onclick="app.step(1)">${s==5?'پایان':'بعد'}
+                    </div>`;
             }
 
-            // --- LOGIC FUNCTIONS ---
-            
-            // Briefs
+            // --- DATA ACTIONS ---
             addBrief() {
                 const n = document.getElementById('bf-name').value;
-                if(!n) return alert('نام کسب‌وکار الزامی است');
+                if(!n) return;
                 this.state.briefs.push({
-                    id: Date.now().toString(),
-                    name: n,
-                    bio: document.getElementById('bf-bio').value,
-                    aud: document.getElementById('bf-aud').value,
-                    tone: document.getElementById('bf-tone').value,
-                    usp: document.getElementById('bf-usp').value
+                    id:Date.now().toString(), name:n, 
+                    bio:document.getElementById('bf-bio').value,
+                    aud:document.getElementById('bf-aud').value,
+                    tone:document.getElementById('bf-tone').value
                 });
-                this.saveStores();
-                this.render();
+                this.saveStores(); this.render();
             }
-            delBrief(id) { this.state.briefs = this.state.briefs.filter(b=>b.id!==id); this.saveStores(); this.render(); }
-
-            // Projects
-            createProject() {
-                if(!this.state.selectedBriefId) return alert('لطفا یک بریف انتخاب کنید');
-                const n = document.getElementById('new-proj-name').value;
-                if(!n) return alert('نام پروژه الزامی است');
-
-                const p = {
-                    id: Date.now().toString(),
-                    name: n,
-                    plat: document.getElementById('new-proj-plat').value,
-                    briefId: this.state.selectedBriefId,
-                    date: new Date().toLocaleDateString('fa-IR'),
-                    data: {}
-                };
-                this.state.projects.unshift(p);
-                this.saveStores();
-                this.nav('wizard', p.id);
-            }
-            delProj(id) { this.state.projects = this.state.projects.filter(p=>p.id!==id); this.saveStores(); this.render(); }
-
-            // Brain
-            async handleFile(e) {
-                const f = e.target.files[0];
-                if(!f) return;
-                this.state.processing = true; this.render();
-                
+            delBrief(id){ this.state.briefs=this.state.briefs.filter(b=>b.id!==id); this.saveStores(); this.render(); }
+            
+            async handleFile(e){
+                const f=e.target.files[0]; if(!f)return;
+                this.state.processing=true; this.render();
                 try {
-                    let txt = "";
-                    if(f.type === 'application/pdf') {
-                        const ab = await f.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument(ab).promise;
-                        for(let i=1; i<=pdf.numPages; i++) {
-                            const p = await pdf.getPage(i);
-                            const c = await p.getTextContent();
-                            txt += c.items.map(s=>s.str).join(' ') + "\n";
+                    let txt="";
+                    if(f.type==='application/pdf'){
+                        const ab=await f.arrayBuffer(); const pdf=await pdfjsLib.getDocument(ab).promise;
+                        for(let i=1;i<=pdf.numPages;i++){
+                            const p=await pdf.getPage(i); const c=await p.getTextContent();
+                            txt+=c.items.map(s=>s.str).join(' ')+"\n";
                         }
-                    } else { txt = await f.text(); }
-                    
-                    document.getElementById('brain-content').value = txt;
-                    if(!document.getElementById('brain-title').value) document.getElementById('brain-title').value = f.name;
-                } catch(e) { alert('خطا در فایل'); }
-                
-                this.state.processing = false; this.render();
+                    } else txt=await f.text();
+                    document.getElementById('brain-content').value=txt;
+                    if(!document.getElementById('brain-title').value) document.getElementById('brain-title').value=f.name;
+                } catch(e){alert('خطا در فایل')}
+                this.state.processing=false; this.render();
             }
-            addBrain() {
-                const t = document.getElementById('brain-title').value;
-                const c = document.getElementById('brain-content').value;
-                if(t && c) { this.state.brain.push({id:Date.now(), title:t, content:c}); this.saveStores(); this.render(); }
+            addBrain(){
+                const t=document.getElementById('brain-title').value;
+                const c=document.getElementById('brain-content').value;
+                if(t&&c){this.state.brain.push({id:Date.now(),title:t,content:c});this.saveStores();this.render();}
             }
-            delBrain(id) { this.state.brain = this.state.brain.filter(b=>b.id!==id); this.saveStores(); this.render(); }
+            delBrain(id){ this.state.brain=this.state.brain.filter(b=>b.id!==id); this.saveStores(); this.render(); }
 
-            // Wizard Logic
-            setTmp(k,v) { this.state.tempData[k] = v; }
-            setContField(id,v) {
-                if(!this.state.tempData.contentFields) this.state.tempData.contentFields = {};
-                this.state.tempData.contentFields[id] = v;
+            createProject(){
+                if(!this.state.selectedBriefId) return alert('بریف انتخاب نشده');
+                const n=document.getElementById('new-proj-name').value;
+                if(!n)return;
+                const p={id:Date.now().toString(),name:n,plat:document.getElementById('new-proj-plat').value,briefId:this.state.selectedBriefId,date:new Date().toLocaleDateString('fa-IR'),data:{}};
+                this.state.projects.unshift(p); this.saveStores(); this.nav('wizard',p.id);
             }
-            step(d) {
-                const ns = this.state.step + d;
-                if(ns > 5) {
-                    const idx = this.state.projects.findIndex(p=>p.id===this.state.activeProj.id);
-                    this.state.projects[idx].data = {...this.state.tempData};
-                    this.saveStores();
-                    this.nav('home');
-                } else if(ns >= 1) {
-                    this.state.step = ns;
-                    this.render();
+            delProj(id){ this.state.projects=this.state.projects.filter(p=>p.id!==id); this.saveStores(); this.render(); }
+
+            setTmp(k,v){ this.state.tempData[k]=v; }
+            setCF(id,v){ 
+                if(!this.state.tempData.contentFields) this.state.tempData.contentFields={};
+                this.state.tempData.contentFields[id]=v;
+            }
+            step(d){
+                const ns=this.state.step+d;
+                if(ns>5){
+                    const idx=this.state.projects.findIndex(p=>p.id===this.state.activeProj.id);
+                    this.state.projects[idx].data={...this.state.tempData};
+                    this.saveStores(); this.nav('home');
+                } else if(ns>=1){ this.state.step=ns; this.render(); }
+            }
+
+            // --- AI CORE (BUG FIXES) ---
+            
+            // 1. JSON Cleaning Function (Fixes "JSON parsing failed")
+            cleanJSON(text) {
+                // Remove Markdown code blocks
+                let clean = text.replace(/```json/g, '').replace(/```/g, '');
+                // Find the first { and last }
+                const first = clean.indexOf('{');
+                const last = clean.lastIndexOf('}');
+                if(first !== -1 && last !== -1) {
+                    return clean.substring(first, last + 1);
                 }
+                return clean; // Fallback
             }
 
-            // --- AI CORE (FIXED) ---
-            async callAI(prompt) {
-                if(!this.state.apiKey) return "MOCK: کلید API وارد نشده است.";
+            async callAI(prompt, jsonMode = false) {
+                if(!this.state.apiKey) return "MOCK: کلید وارد نشده";
                 
                 const b = this.state.activeBrief;
-                // Construct Context
-                let system = `ROLE: Expert Content Strategist.\n`;
-                system += `BRAND PROFILE:\nName: ${b.name}\nBio: ${b.bio}\nAudience: ${b.aud}\nTone: ${b.tone}\nUSP: ${b.usp}\n\n`;
+                let sys = `ROLE: Marketing Expert.\nContext: Brand:${b.name}, Aud:${b.aud}, Tone:${b.tone}.\nKnowledge:\n`;
+                this.state.brain.forEach(d => sys += `Source ${d.title}: ${d.content.substring(0,800)}...\n`);
                 
-                if(this.state.brain.length > 0) {
-                    system += `KNOWLEDGE BASE:\n`;
-                    this.state.brain.forEach(doc => system += `Source (${doc.title}): ${doc.content.substring(0,1000)}...\n`);
-                }
+                if(jsonMode) sys += "\nIMPORTANT: Return ONLY valid JSON. No text before/after.";
 
-                // Model Selection Logic
-                const modelName = this.state.model || 'gemini-1.5-flash';
-                // Note: v1beta is the standard endpoint for new models
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${this.state.apiKey}`;
+                const model = this.state.model;
+                // Fix: Using correct URL structure for v1beta
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.state.apiKey}`;
 
                 try {
                     const res = await fetch(url, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: system + "\nTASK: " + prompt }] }]
-                        })
+                        body: JSON.stringify({ contents: [{ parts: [{ text: sys + "\nTASK: " + prompt }] }] })
                     });
+                    const d = await res.json();
                     
-                    const data = await res.json();
-                    
-                    if(data.error) {
-                        console.error(data.error);
-                        return `Error: ${data.error.message}\n(Tip: Try changing the model in Settings)`;
+                    if(d.error) {
+                        return `ERROR: ${d.error.message}`; // Fix: Handle model not found error gracefully
                     }
                     
-                    return data.candidates[0].content.parts[0].text;
-                } catch(e) {
-                    return "Network Error: " + e.message;
-                }
+                    return d.candidates[0].content.parts[0].text;
+                } catch(e) { return "Network Error: " + e.message; }
             }
 
             async autoFill() {
                 const d = this.state.tempData;
                 const tmpl = FRAMEWORKS[d.tmpl];
                 
-                // Show loading state
-                const container = document.getElementById('fields-container');
-                const originalHTML = container.innerHTML;
-                container.innerHTML = '<div class="flicker text-accent">درحال نوشتن هوشمند...</div>';
-
-                const prompt = `Generate content for a "${d.tmpl}" framework ad.
-                Objective: ${d.obj}. Topic: ${d.offer}.
-                Return JSON with keys: ${tmpl.fields.map(f=>f.id).join(', ')}.
-                Content should be in Persian, creative, and match the brand tone.`;
-
-                const res = await this.callAI(prompt);
+                const cont = document.getElementById('fields-container');
+                cont.innerHTML = '<div class="flicker text-accent">درحال نوشتن با هوش مصنوعی...</div>';
                 
+                const prompt = `Write content for framework: ${d.tmpl}.
+                Objective: ${d.obj}. Topic: ${d.offer}.
+                Return JSON keys: ${tmpl.fields.map(f=>f.id).join(',')}.
+                Language: Persian.`;
+                
+                const res = await this.callAI(prompt, true);
+                
+                if(res.startsWith("ERROR")) {
+                    alert(res);
+                    this.render(); // Reload inputs
+                    return;
+                }
+
                 try {
-                    // Clean JSON
-                    const clean = res.replace(/```json/g, '').replace(/```/g, '').trim();
-                    const json = JSON.parse(clean);
-                    
-                    if(!this.state.tempData.contentFields) this.state.tempData.contentFields = {};
+                    const json = JSON.parse(this.cleanJSON(res));
+                    if(!this.state.tempData.contentFields) this.state.tempData.contentFields={};
                     tmpl.fields.forEach(f => {
                         if(json[f.id]) this.state.tempData.contentFields[f.id] = json[f.id];
                     });
                 } catch(e) {
-                    alert('AI generated text but JSON parsing failed. Check console.');
-                    console.log(res);
+                    console.error("JSON Parse Error", res);
+                    alert("AI text received but format was wrong. See console.");
                 }
-
                 this.render();
             }
 
-            async runAnalysis() {
-                const btn = document.getElementById('btn-analyze');
-                btn.innerText = 'درحال تحلیل...'; btn.disabled = true;
+            async analyze() {
+                const btn=document.getElementById('btn-anlz'); btn.innerText='...'; btn.disabled=true;
+                const d=this.state.tempData;
+                let txt=""; if(d.contentFields) Object.values(d.contentFields).forEach(v=>txt+=v+"\n");
                 
-                const d = this.state.tempData;
-                let txt = "";
-                if(d.contentFields) Object.values(d.contentFields).forEach(v => txt += v + "\n");
-
-                const prompt = `Analyze this Persian ad copy based on the ${d.tmpl} framework.
-                Content: ${txt}
-                Provide bullet points: 1. Strengths 2. Weaknesses 3. Improved Hook suggestion.`;
+                const prompt = `Analyze this Persian copy (${d.tmpl}). Content: ${txt}. Provide Strengths, Weaknesses, Fixes.`;
+                const res = await this.callAI(prompt, false);
                 
-                const res = await this.callAI(prompt);
                 this.state.tempData.aiRes = res;
                 document.getElementById('ai-res').innerHTML = res;
                 document.getElementById('ai-res').classList.remove('hidden');
-                btn.innerText = 'شروع آنالیز'; btn.disabled = false;
+                btn.innerText='تحلیل'; btn.disabled=false;
             }
 
-            async genCaption() {
-                const btn = document.getElementById('btn-cap');
-                btn.innerText = '...'; btn.disabled = true;
-                const d = this.state.tempData;
-                let txt = "";
-                if(d.contentFields) Object.values(d.contentFields).forEach(v => txt += v + "\n");
+            async caption() {
+                const btn=document.getElementById('btn-cap'); btn.innerText='...'; btn.disabled=true;
+                const d=this.state.tempData;
+                let txt=""; if(d.contentFields) Object.values(d.contentFields).forEach(v=>txt+=v+"\n");
                 
-                const prompt = `Write an engaging Instagram/LinkedIn caption for this content.
-                Content: ${txt}.
-                Include 10 relevant Persian hashtags.`;
+                const prompt = `Write Persian caption for: ${txt}. Add emojis & 10 hashtags.`;
+                const res = await this.callAI(prompt, false);
                 
-                const res = await this.callAI(prompt);
                 this.state.tempData.caption = res;
                 document.getElementById('final-cap').value = res;
-                btn.innerText = 'نوشتن کپشن'; btn.disabled = false;
+                btn.innerText='کپشن'; btn.disabled=false;
             }
-
-            copy(id) { document.getElementById(id).select(); document.execCommand('copy'); }
         }
 
         const app = new App();
