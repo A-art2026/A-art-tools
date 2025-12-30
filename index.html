@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A_art Planner | نسخه بدون باگ</title>
+    <title>A_art Planner | Universal AI</title>
     
     <!-- Fonts & Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +17,7 @@
         :root {
             --bg-deep: #050505;
             --bg-card: #121212;
-            --bg-input: #1a1a1a;
+            --bg-input: #1f1f1f;
             --accent: #CCFF00;
             --accent-dim: rgba(204, 255, 0, 0.1);
             --text-main: #e0e0e0;
@@ -73,6 +73,11 @@
         .btn-primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 800; }
         .btn-primary:hover { background: #b3e600; box-shadow: 0 0 20px var(--accent-dim); transform: translateY(-2px); }
         .btn-sm { padding: 6px 12px; font-size: 0.8rem; }
+        
+        /* Provider Selector Tabs */
+        .provider-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #333; padding-bottom: 10px; }
+        .p-tab { padding: 10px 20px; cursor: pointer; opacity: 0.5; border-radius: 8px; background: #222; }
+        .p-tab.active { opacity: 1; background: var(--accent); color: #000; font-weight: bold; }
 
         /* Header */
         header {
@@ -86,20 +91,20 @@
         .nav-link { background: none; border: none; color: var(--text-muted); cursor: pointer; margin-left: 20px; font-size: 0.95rem; font-family: var(--font-fa); transition: 0.3s; }
         .nav-link.active { color: var(--accent); text-shadow: 0 0 8px var(--accent-dim); }
 
-        /* Layout */
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .flex { display: flex; } .justify-between { justify-content: space-between; } .w-full { width: 100%; }
-        .hidden { display: none !important; }
-
         /* Step Dots */
         .step-indicator { display: flex; gap: 5px; margin-bottom: 20px; }
         .step-dot { flex: 1; height: 4px; background: #333; border-radius: 2px; transition: 0.3s; }
         .step-dot.active { background: var(--accent); box-shadow: 0 0 5px var(--accent); }
 
+        /* Grid */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .flex { display: flex; } .justify-between { justify-content: space-between; } .w-full { width: 100%; }
+        .hidden { display: none !important; }
+
         @media (max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
         
-        dialog { background: var(--bg-card); color: #fff; border: 1px solid var(--accent); border-radius: 12px; width: 90%; max-width: 500px; padding: 25px; box-shadow: 0 0 50px #000; }
+        dialog { background: var(--bg-card); color: #fff; border: 1px solid var(--accent); border-radius: 12px; width: 95%; max-width: 600px; padding: 25px; box-shadow: 0 0 50px #000; max-height: 90vh; overflow-y: auto; }
         dialog::backdrop { background: rgba(0,0,0,0.85); }
     </style>
 </head>
@@ -107,24 +112,49 @@
 
     <div id="aura"></div>
 
-    <!-- SETTINGS MODAL -->
+    <!-- SETTINGS MODAL (UNIVERSAL) -->
     <dialog id="settings-modal">
-        <h2>تنظیمات هوش مصنوعی</h2>
-        <p>لطفا کلید جدید خود را وارد کنید.</p>
-        
-        <label>Google Gemini API Key</label>
-        <input type="password" id="api-key" placeholder="AIzaSy..." class="font-en">
-        
-        <label>انتخاب مدل (رفع ارور Not Found)</label>
-        <select id="ai-model" class="font-en">
-            <!-- مدل‌های جدید که ارور نمی‌دهند -->
-            <option value="gemini-1.5-flash">gemini-1.5-flash (پیش‌فرض: سریع و ارزان)</option>
-            <option value="gemini-1.5-pro">gemini-1.5-pro (هوشمندتر)</option>
-        </select>
+        <h2>تنظیمات اتصال به هوش مصنوعی</h2>
+        <p>نوع سرویس خود را انتخاب کنید:</p>
+
+        <div class="provider-tabs">
+            <div class="p-tab active" id="tab-gemini" onclick="app.switchTab('gemini')">Google Gemini</div>
+            <div class="p-tab" id="tab-openai" onclick="app.switchTab('openai')">OpenAI / Custom</div>
+        </div>
+
+        <!-- Google Gemini Fields -->
+        <div id="cfg-gemini">
+            <p style="font-size:0.8rem; color:#aaa">اتصال مستقیم به سرورهای گوگل. نیاز به فیلترشکن.</p>
+            <label>API Key</label>
+            <input type="password" id="gemini-key" class="font-en" placeholder="AIzaSy...">
+            <label>مدل (Model)</label>
+            <select id="gemini-model" class="font-en">
+                <option value="gemini-1.5-flash">gemini-1.5-flash (پیش‌فرض)</option>
+                <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            </select>
+        </div>
+
+        <!-- OpenAI / Custom Fields -->
+        <div id="cfg-openai" class="hidden">
+            <p style="font-size:0.8rem; color:#aaa">اتصال به هر سرویس سازگار با OpenAI (مثل ChatGPT، Groq، DeepSeek یا پروکسی‌های داخلی).</p>
+            <label>API Base URL (آدرس سرور)</label>
+            <input type="text" id="custom-url" class="font-en" placeholder="https://api.openai.com/v1">
+            <p style="font-size:0.7rem; color:#666; margin-top:-10px; margin-bottom:10px">نکته: برای Groq بزنید: <code>https://api.groq.com/openai/v1</code></p>
+            
+            <label>API Key (Bearer Token)</label>
+            <input type="password" id="custom-key" class="font-en" placeholder="sk-...">
+            
+            <label>Model Name</label>
+            <input type="text" id="custom-model" class="font-en" placeholder="gpt-4o-mini">
+        </div>
+
+        <div style="background:#222; padding:10px; border-radius:8px; margin-top:15px; font-size:0.8rem">
+            وضعیت تست: <span id="conn-status" style="color:yellow">ناشناخته</span>
+        </div>
 
         <div class="flex justify-between mt-4">
-            <button class="btn" onclick="document.getElementById('settings-modal').close()">بستن</button>
-            <button class="btn btn-primary" onclick="app.saveSettings()">ذخیره تنظیمات</button>
+            <button class="btn" onclick="app.testConnection()">تست اتصال</button>
+            <button class="btn btn-primary" onclick="app.saveSettings()">ذخیره و بستن</button>
         </div>
     </dialog>
 
@@ -135,7 +165,7 @@
                 <button class="nav-link active" onclick="app.nav('home')">پروژه‌ها</button>
                 <button class="nav-link" onclick="app.nav('briefs')">بریف‌ها</button>
                 <button class="nav-link" onclick="app.nav('brain')">مغز متفکر</button>
-                <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">تنظیمات</button>
+                <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">⚙️ تنظیمات API</button>
             </nav>
         </div>
     </header>
@@ -146,35 +176,31 @@
         // --- CONTENT FRAMEWORKS ---
         const FRAMEWORKS = {
             'AIDA': {
-                name: 'AIDA',
-                desc: 'مدل کلاسیک: توجه، علاقه، تمایل، اقدام.',
+                name: 'AIDA', desc: 'مدل کلاسیک برای تبدیل توجه به خرید.',
                 fields: [
-                    { id: 'attention', label: 'Attention (توجه)', hint: 'قلابی برای میخکوب کردن مخاطب در ۳ ثانیه اول.' },
-                    { id: 'interest', label: 'Interest (علاقه)', hint: 'اطلاعات جذاب یا سرگرم‌کننده مرتبط.' },
-                    { id: 'desire', label: 'Desire (تمایل)', hint: 'ایجاد عطش با مزایا و اثبات اجتماعی.' },
-                    { id: 'action', label: 'Action (اقدام)', hint: 'فراخوان عمل (CTA) شفاف.' }
+                    { id: 'attention', label: 'Attention (توجه)', hint: 'قلاب ۳ ثانیه‌ای.' },
+                    { id: 'interest', label: 'Interest (علاقه)', hint: 'اطلاعات جذاب مرتبط.' },
+                    { id: 'desire', label: 'Desire (تمایل)', hint: 'مزایا و اثبات.' },
+                    { id: 'action', label: 'Action (اقدام)', hint: 'CTA شفاف.' }
                 ]
             },
             'PAS': {
-                name: 'PAS',
-                desc: 'مشکل، تشدید، راه حل.',
+                name: 'PAS', desc: 'مشکل، تشدید، راه حل.',
                 fields: [
-                    { id: 'problem', label: 'Problem (مشکل)', hint: 'درد یا چالش اصلی مخاطب چیست؟' },
-                    { id: 'agitate', label: 'Agitate (تشدید)', hint: 'عواقب حل نکردن مشکل (نمک روی زخم).' },
-                    { id: 'solution', label: 'Solution (راه‌حل)', hint: 'معرفی محصول شما به عنوان راه نجات.' }
+                    { id: 'problem', label: 'Problem (مشکل)', hint: 'درد اصلی مخاطب.' },
+                    { id: 'agitate', label: 'Agitate (تشدید)', hint: 'عواقب درد.' },
+                    { id: 'solution', label: 'Solution (راه‌حل)', hint: 'محصول شما.' }
                 ]
             },
             'StoryBrand': {
-                name: 'StoryBrand',
-                desc: 'مشتری قهرمان است، شما راهنما.',
+                name: 'StoryBrand', desc: 'سفر قهرمان.',
                 fields: [
-                    { id: 'character', label: 'Character (قهرمان)', hint: 'خواسته اصلی مشتری.' },
-                    { id: 'problem', label: 'Problem (مشکل)', hint: 'مانع سر راه او.' },
-                    { id: 'guide', label: 'Guide (راهنما)', hint: 'چرا برند شما قابل اعتماد است؟' },
-                    { id: 'plan', label: 'Plan (نقشه)', hint: 'مراحل ساده استفاده.' },
-                    { id: 'cta', label: 'CTA', hint: 'دعوت به خرید/عضویت.' },
-                    { id: 'failure', label: 'Failure (شکست)', hint: 'هزینه نخریدن محصول.' },
-                    { id: 'success', label: 'Success (پیروزی)', hint: 'زندگی رویایی بعد از خرید.' }
+                    { id: 'character', label: 'Character', hint: 'خواسته قهرمان.' },
+                    { id: 'problem', label: 'Problem', hint: 'مانع.' },
+                    { id: 'guide', label: 'Guide', hint: 'همدلی و صلاحیت برند.' },
+                    { id: 'plan', label: 'Plan', hint: 'نقشه راه.' },
+                    { id: 'cta', label: 'CTA', hint: 'دعوت.' },
+                    { id: 'success', label: 'Success', hint: 'پایان خوش.' }
                 ]
             }
         };
@@ -184,57 +210,96 @@
             constructor() {
                 this.state = {
                     view: 'home',
+                    // Data
                     projects: JSON.parse(localStorage.getItem('aart_projects') || '[]'),
                     briefs: JSON.parse(localStorage.getItem('aart_briefs') || '[]'),
                     brain: JSON.parse(localStorage.getItem('aart_brain') || '[]'),
                     
-                    apiKey: localStorage.getItem('aart_key') || '',
-                    // اگر مدل قبلی در حافظه بود و خراب بود، ریست شود به فلش
-                    model: (localStorage.getItem('aart_model') && localStorage.getItem('aart_model').includes('gemini-1.5')) 
-                           ? localStorage.getItem('aart_model') 
-                           : 'gemini-1.5-flash',
+                    // Config
+                    provider: localStorage.getItem('aart_provider') || 'gemini', // gemini | openai
                     
-                    activeProj: null,
-                    activeBrief: null,
-                    step: 1,
-                    tempData: {},
-                    processing: false
+                    geminiKey: localStorage.getItem('aart_gemini_key') || '',
+                    geminiModel: localStorage.getItem('aart_gemini_model') || 'gemini-1.5-flash',
+                    
+                    customUrl: localStorage.getItem('aart_custom_url') || 'https://api.openai.com/v1',
+                    customKey: localStorage.getItem('aart_custom_key') || '',
+                    customModel: localStorage.getItem('aart_custom_model') || 'gpt-4o-mini',
+                    
+                    // Runtime
+                    activeProj: null, activeBrief: null, step: 1, tempData: {}, processing: false
                 };
 
-                // ذخیره مدل صحیح در اولین اجرا
-                if(localStorage.getItem('aart_model') !== this.state.model) {
-                    localStorage.setItem('aart_model', this.state.model);
-                }
+                // Initialize Settings UI Values
+                setTimeout(() => {
+                    document.getElementById('gemini-key').value = this.state.geminiKey;
+                    document.getElementById('gemini-model').value = this.state.geminiModel;
+                    document.getElementById('custom-url').value = this.state.customUrl;
+                    document.getElementById('custom-key').value = this.state.customKey;
+                    document.getElementById('custom-model').value = this.state.customModel;
+                    this.switchTab(this.state.provider);
+                }, 100);
 
-                if (!this.state.apiKey) setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
+                if (!this.state.geminiKey && !this.state.customKey) setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
                 this.render();
             }
 
-            // --- DATA ---
+            // --- SETTINGS LOGIC ---
+            switchTab(prov) {
+                this.state.provider = prov;
+                document.querySelectorAll('.p-tab').forEach(el => el.classList.remove('active'));
+                document.getElementById('tab-' + prov).classList.add('active');
+                
+                document.getElementById('cfg-gemini').classList.add('hidden');
+                document.getElementById('cfg-openai').classList.add('hidden');
+                document.getElementById('cfg-' + prov).classList.remove('hidden');
+            }
+
             saveSettings() {
-                const k = document.getElementById('api-key').value;
-                const m = document.getElementById('ai-model').value;
-                this.state.apiKey = k;
-                this.state.model = m;
-                localStorage.setItem('aart_key', k);
-                localStorage.setItem('aart_model', m);
+                this.state.geminiKey = document.getElementById('gemini-key').value.trim();
+                this.state.geminiModel = document.getElementById('gemini-model').value;
+                this.state.customUrl = document.getElementById('custom-url').value.trim();
+                this.state.customKey = document.getElementById('custom-key').value.trim();
+                this.state.customModel = document.getElementById('custom-model').value.trim();
+
+                localStorage.setItem('aart_provider', this.state.provider);
+                localStorage.setItem('aart_gemini_key', this.state.geminiKey);
+                localStorage.setItem('aart_gemini_model', this.state.geminiModel);
+                localStorage.setItem('aart_custom_url', this.state.customUrl);
+                localStorage.setItem('aart_custom_key', this.state.customKey);
+                localStorage.setItem('aart_custom_model', this.state.customModel);
+
                 document.getElementById('settings-modal').close();
-                alert('تنظیمات ذخیره شد. مدل فعال: ' + m);
+                alert(`تنظیمات ذخیره شد. حالت فعال: ${this.state.provider.toUpperCase()}`);
             }
 
-            saveStores() {
-                localStorage.setItem('aart_projects', JSON.stringify(this.state.projects));
-                localStorage.setItem('aart_briefs', JSON.stringify(this.state.briefs));
-                localStorage.setItem('aart_brain', JSON.stringify(this.state.brain));
+            async testConnection() {
+                const stat = document.getElementById('conn-status');
+                stat.innerText = "درحال اتصال...";
+                stat.style.color = "yellow";
+
+                let res = "";
+                try {
+                    // Simple "Hello" prompt
+                    res = await this.callAI("فقط بگو: سلام", false);
+                } catch(e) {
+                    res = "ERROR: " + e.message;
+                }
+
+                if (res.startsWith("ERROR") || res.includes("MOCK")) {
+                    stat.innerText = "خطا: " + res;
+                    stat.style.color = "red";
+                } else {
+                    stat.innerText = "موفق! پاسخ: " + res;
+                    stat.style.color = "#0f0";
+                }
             }
 
-            // --- NAV ---
+            // --- NAVIGATION ---
             nav(view, id = null) {
                 this.state.view = view;
                 document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
-                
                 const navMap = {'home':0, 'briefs':1, 'brain':2};
-                if(navMap[view] !== undefined) document.querySelectorAll('.nav-link')[navMap[view]].classList.add('active');
+                if(navMap[view]!==undefined) document.querySelectorAll('.nav-link')[navMap[view]].classList.add('active');
 
                 if (view === 'wizard') {
                     const p = this.state.projects.find(x => x.id === id);
@@ -246,7 +311,7 @@
                 this.render();
             }
 
-            // --- RENDER ---
+            // --- RENDER VIEWS ---
             render() {
                 const root = document.getElementById('root');
                 root.innerHTML = '';
@@ -259,336 +324,168 @@
                 }
             }
 
-            // [Views: Home, Briefs, Brain, Setup - Same as before but cleaner]
             viewHome() {
                 return `
-                    <div class="flex justify-between" style="align-items:center; margin-bottom:20px">
+                    <div class="flex justify-between" style="margin-bottom:20px; align-items:center;">
                         <h2>پروژه‌ها</h2>
                         <button class="btn btn-primary" onclick="app.nav('new-project')">+ پروژه جدید</button>
                     </div>
-                    ${this.state.projects.length===0 ? '<div class="card text-center">هنوز پروژه‌ای ندارید.</div>' : ''}
+                    ${this.state.projects.length===0 ? '<div class="card text-center">پروژه‌ای نیست.</div>' : ''}
                     <div class="grid-3">
                         ${this.state.projects.map(p => {
                             const b = this.state.briefs.find(x => x.id === p.briefId);
-                            return `
-                            <div class="card" onclick="app.nav('wizard','${p.id}')" style="cursor:pointer">
-                                <strong>${p.name}</strong>
-                                <div style="font-size:0.8rem; color:#888; margin:10px 0">بریف: ${b?b.name:'-'}<br>پلتفرم: ${p.plat}</div>
-                                <button class="btn btn-sm" onclick="event.stopPropagation(); app.delProj('${p.id}')">حذف</button>
-                            </div>`;
+                            return `<div class="card" onclick="app.nav('wizard','${p.id}')" style="cursor:pointer"><strong>${p.name}</strong><br><span style="font-size:0.8rem;color:#666">بریف: ${b?b.name:'-'}</span><br><button class="btn btn-sm mt-2" onclick="event.stopPropagation();app.delProj('${p.id}')">حذف</button></div>`;
                         }).join('')}
-                    </div>
-                `;
+                    </div>`;
             }
 
             viewBriefs() {
                 return `
-                    <div class="card">
-                        <h2>ساخت بریف (پروفایل کسب‌وکار)</h2>
-                        <div class="grid-2">
-                            <div><label>نام برند</label><input id="bf-name"></div>
-                            <div><label>لحن برند</label><input id="bf-tone" placeholder="دوستانه، رسمی..."></div>
-                        </div>
-                        <label>درباره ما</label><textarea id="bf-bio" rows="2"></textarea>
-                        <label>مخاطب هدف</label><textarea id="bf-aud" rows="2"></textarea>
-                        <button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره بریف</button>
-                    </div>
-                    <h3>بریف‌های موجود</h3>
-                    <div class="grid-3">
-                        ${this.state.briefs.map(b => `
-                            <div class="card">
-                                <h3 style="color:var(--accent)">${b.name}</h3>
-                                <p style="font-size:0.8rem">${b.bio}</p>
-                                <button class="btn btn-sm mt-4" onclick="app.delBrief('${b.id}')">حذف</button>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
+                    <div class="card"><h2>ساخت بریف</h2><div class="grid-2"><div><label>نام</label><input id="bf-name"></div><div><label>لحن</label><input id="bf-tone"></div></div><label>مخاطب</label><textarea id="bf-aud"></textarea><button class="btn btn-primary w-full" onclick="app.addBrief()">ذخیره</button></div>
+                    <div class="grid-3">${this.state.briefs.map(b => `<div class="card"><h3 class="text-accent">${b.name}</h3><p style="font-size:0.8rem">${b.aud}</p><button class="btn btn-sm" onclick="app.delBrief('${b.id}')">حذف</button></div>`).join('')}</div>`;
             }
 
             viewBrain() {
                 return `
-                    <div class="card">
-                        <h2>مغز متفکر (PDF/Text)</h2>
-                        <div class="grid-2">
-                            <div>
-                                <label>عنوان</label><input id="brain-title">
-                                <label>آپلود PDF/TXT</label>
-                                <input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt,.md">
-                                ${this.state.processing ? '<span class="flicker text-accent">درحال پردازش...</span>' : ''}
-                            </div>
-                            <div>
-                                <label>متن استخراج شده</label><textarea id="brain-content" rows="6"></textarea>
-                                <button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن</button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid-3">
-                        ${this.state.brain.map(b => `<div class="card"><strong>${b.title}</strong><br><button class="btn btn-sm mt-4" onclick="app.delBrain(${b.id})">حذف</button></div>`).join('')}
-                    </div>
-                `;
+                    <div class="card"><h2>مغز متفکر (PDF)</h2><div class="grid-2"><div><label>عنوان</label><input id="br-title"><input type="file" onchange="app.handleFile(event)" accept=".pdf,.txt"></div><div><textarea id="br-con" rows="5"></textarea><button class="btn btn-primary w-full" onclick="app.addBrain()">افزودن</button></div></div></div>
+                    <div class="grid-3">${this.state.brain.map(b => `<div class="card"><strong>${b.title}</strong><br><button class="btn btn-sm mt-2" onclick="app.delBrain(${b.id})">حذف</button></div>`).join('')}</div>`;
             }
 
             viewNewProjectSetup() {
-                if(this.state.briefs.length === 0) return `<div class="container text-center pt-5"><h2>ابتدا یک بریف بسازید</h2><button class="btn btn-primary" onclick="app.nav('briefs')">ساخت بریف</button></div>`;
-                return `
-                    <h2>پروژه جدید: انتخاب بریف</h2>
-                    <div class="grid-3" style="margin-bottom:20px">
-                        ${this.state.briefs.map(b => `
-                            <div class="card selectable-brief" id="brief-${b.id}" onclick="app.selBrief('${b.id}')" style="cursor:pointer; border:2px solid #333">
-                                <strong>${b.name}</strong>
-                            </div>
-                        `).join('')}
-                    </div>
-                    <div class="card">
-                        <label>نام پروژه</label><input id="new-proj-name">
-                        <label>پلتفرم</label>
-                        <select id="new-proj-plat"><option>Instagram</option><option>LinkedIn</option><option>Website</option></select>
-                        <button class="btn btn-primary w-full" onclick="app.createProject()">ایجاد پروژه</button>
-                    </div>
-                `;
+                if(this.state.briefs.length===0) return '<div class="container text-center pt-5"><h2>اول بریف بسازید</h2><button class="btn btn-primary" onclick="app.nav(\'briefs\')">ساخت بریف</button></div>';
+                return `<h2>انتخاب بریف برای پروژه</h2><div class="grid-3 mb-4">${this.state.briefs.map(b=>`<div class="card selectable" id="br-${b.id}" onclick="app.selBr('${b.id}')" style="cursor:pointer;border:2px solid #333">${b.name}</div>`).join('')}</div><div class="card"><label>نام پروژه</label><input id="np-name"><button class="btn btn-primary w-full" onclick="app.createProject()">ایجاد</button></div>`;
             }
-
-            selBrief(id) {
-                document.querySelectorAll('.selectable-brief').forEach(e => {e.style.borderColor='#333';e.style.background='var(--bg-card)'});
-                const el = document.getElementById(`brief-${id}`);
-                el.style.borderColor='var(--accent)';
-                el.style.background='#1a1a1a';
-                this.state.selectedBriefId = id;
-            }
+            
+            selBr(id){ document.querySelectorAll('.selectable').forEach(e=>e.style.borderColor='#333'); document.getElementById(`br-${id}`).style.borderColor='var(--accent)'; this.state.selBrId=id; }
 
             // --- WIZARD ---
             renderWizard(root) {
-                const s = this.state.step;
-                const d = this.state.tempData;
-                let content = '';
-
+                const s = this.state.step; const d = this.state.tempData;
+                let c = '';
+                
                 if(s===1) {
-                    content = `
-                        <h3>هدف‌گذاری</h3>
-                        <div class="grid-2">
-                            <div><label>هدف</label><select id="inp-obj" onchange="app.setTmp('obj',this.value)"><option>Awareness</option><option>Sales</option><option>Engagement</option></select></div>
-                            <div><label>موضوع</label><input value="${d.topic||''}" onchange="app.setTmp('topic',this.value)"></div>
-                        </div>
-                        <label>پیام کلیدی</label><textarea onchange="app.setTmp('offer',this.value)">${d.offer||''}</textarea>
-                    `;
+                    c = `<h3>هدف</h3><div class="grid-2"><div><label>هدف</label><select id="i-obj" onchange="app.setD('obj',this.value)"><option>Awareness</option><option>Sales</option><option>Engagement</option></select></div><div><label>موضوع</label><input value="${d.topic||''}" onchange="app.setD('topic',this.value)"></div></div><label>آفر</label><textarea onchange="app.setD('offer',this.value)">${d.offer||''}</textarea>`;
                 } else if(s===2) {
-                    let rec = 'AIDA';
-                    if(d.obj==='Sales') rec='PAS';
-                    if(d.obj==='Engagement') rec='StoryBrand';
-                    if(!d.tmpl) d.tmpl = rec;
-                    content = `
-                        <h3>انتخاب قالب</h3>
-                        <div class="card" style="border-color:var(--accent)"><strong class="text-accent">پیشنهاد: ${rec}</strong></div>
-                        <select id="inp-tmpl" onchange="app.setTmp('tmpl',this.value);app.render()">
-                            ${Object.keys(FRAMEWORKS).map(k=>`<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}
-                        </select>
-                        <p class="mt-4">${FRAMEWORKS[d.tmpl].desc}</p>
-                    `;
+                    let rec = 'AIDA'; if(d.obj==='Sales') rec='PAS'; if(d.obj==='Engagement') rec='StoryBrand'; if(!d.tmpl) d.tmpl=rec;
+                    c = `<h3>قالب (${rec} پیشنهادی)</h3><select id="i-tmpl" onchange="app.setD('tmpl',this.value);app.render()">${Object.keys(FRAMEWORKS).map(k=>`<option value="${k}" ${d.tmpl==k?'selected':''}>${FRAMEWORKS[k].name}</option>`).join('')}</select><p class="mt-4">${FRAMEWORKS[d.tmpl].desc}</p>`;
                 } else if(s===3) {
                     const f = FRAMEWORKS[d.tmpl].fields;
-                    const fields = f.map(x => `
-                        <div style="margin-bottom:15px">
-                            <label class="text-accent">${x.label}</label>
-                            <p style="font-size:0.8rem;color:#666">${x.hint}</p>
-                            <textarea rows="3" onchange="app.setCF('${x.id}',this.value)">${(d.contentFields&&d.contentFields[x.id])||''}</textarea>
-                        </div>
-                    `).join('');
-                    content = `
-                        <h3>تولید محتوا (${d.tmpl})</h3>
-                        <button class="btn btn-sm mb-4" onclick="app.autoFill()" style="border-color:var(--accent);color:var(--accent)">✨ تکمیل خودکار با AI</button>
-                        <div id="fields-container">${fields}</div>
-                    `;
+                    c = `<h3>محتوا</h3><button class="btn btn-sm mb-4" onclick="app.autoFill()" style="color:var(--accent);border-color:var(--accent)">✨ تکمیل خودکار</button><div id="f-cont">${f.map(x=>`<div class="mb-4"><label class="text-accent">${x.label}</label><p style="font-size:0.8rem;color:#666">${x.hint}</p><textarea rows="3" onchange="app.setCF('${x.id}',this.value)">${(d.cf&&d.cf[x.id])||''}</textarea></div>`).join('')}</div>`;
                 } else if(s===4) {
-                    content = `<h3>آنالیز</h3><button class="btn btn-primary w-full" id="btn-anlz" onclick="app.analyze()">شروع آنالیز</button><div id="ai-res" class="card mt-4 hidden" style="white-space:pre-wrap">${d.aiRes||''}</div>`;
+                    c = `<h3>آنالیز</h3><button class="btn btn-primary w-full" id="btn-anlz" onclick="app.analyze()">شروع</button><div id="ai-res" class="card mt-4 hidden" style="white-space:pre-wrap">${d.aiRes||''}</div>`;
                 } else if(s===5) {
-                    let script = `استراتژی: ${d.tmpl}\n\n`;
-                    if(d.contentFields) FRAMEWORKS[d.tmpl].fields.forEach(f => script += `[${f.label}]:\n${d.contentFields[f.id]||''}\n\n`);
-                    content = `
-                        <h3>خروجی</h3>
-                        <div class="grid-2">
-                            <div><label>متن</label><textarea rows="10" id="ftxt">${script}</textarea></div>
-                            <div><button class="btn btn-primary w-full mb-2" id="btn-cap" onclick="app.caption()">کپشن نویسی</button><textarea rows="8" id="fcap">${d.caption||''}</textarea></div>
-                        </div>
-                    `;
+                    let txt=`استراتژی: ${d.tmpl}\n\n`; if(d.cf) FRAMEWORKS[d.tmpl].fields.forEach(f=>txt+=`[${f.label}]:\n${d.cf[f.id]||''}\n\n`);
+                    c = `<h3>خروجی</h3><div class="grid-2"><div><label>متن</label><textarea rows="10" id="ftxt">${txt}</textarea></div><div><button class="btn btn-primary w-full mb-2" id="btn-cap" onclick="app.caption()">کپشن</button><textarea rows="8" id="fcap">${d.cap||''}</textarea></div></div>`;
                 }
 
-                root.innerHTML = `
-                    <div class="flex justify-between mb-4"><button class="btn" onclick="app.nav('home')">خروج</button><span>${this.state.activeProj.name}</span></div>
-                    <div class="step-indicator">${[1,2,3,4,5].map(i=>`<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}</div>
-                    <div style="min-height:400px">${content}</div>
-                    <div class="flex justify-between mt-4">
-                        <button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>قبل</button>
-                        <button class="btn btn-primary" onclick="app.step(1)">${s==5?'پایان':'بعد'}
-                    </div>`;
+                root.innerHTML = `<div class="flex justify-between mb-4"><button class="btn" onclick="app.nav('home')">خروج</button><span>${this.state.activeProj.name}</span></div><div class="step-indicator">${[1,2,3,4,5].map(i=>`<div class="step-dot ${i<=s?'active':''}"></div>`).join('')}</div><div style="min-height:400px">${c}</div><div class="flex justify-between mt-4"><button class="btn" onclick="app.step(-1)" ${s==1?'disabled':''}>قبل</button><button class="btn btn-primary" onclick="app.step(1)">${s==5?'پایان':'بعد'}</button></div>`;
             }
 
-            // --- DATA ACTIONS ---
-            addBrief() {
-                const n = document.getElementById('bf-name').value;
-                if(!n) return;
-                this.state.briefs.push({
-                    id:Date.now().toString(), name:n, 
-                    bio:document.getElementById('bf-bio').value,
-                    aud:document.getElementById('bf-aud').value,
-                    tone:document.getElementById('bf-tone').value
-                });
-                this.saveStores(); this.render();
-            }
+            // --- DATA HELPERS ---
+            addBrief(){ const n=document.getElementById('bf-name').value; if(n){this.state.briefs.push({id:Date.now().toString(),name:n,tone:document.getElementById('bf-tone').value,aud:document.getElementById('bf-aud').value,bio:document.getElementById('bf-bio').value});this.saveStores();this.render();} }
             delBrief(id){ this.state.briefs=this.state.briefs.filter(b=>b.id!==id); this.saveStores(); this.render(); }
-            
-            async handleFile(e){
-                const f=e.target.files[0]; if(!f)return;
-                this.state.processing=true; this.render();
-                try {
-                    let txt="";
-                    if(f.type==='application/pdf'){
-                        const ab=await f.arrayBuffer(); const pdf=await pdfjsLib.getDocument(ab).promise;
-                        for(let i=1;i<=pdf.numPages;i++){
-                            const p=await pdf.getPage(i); const c=await p.getTextContent();
-                            txt+=c.items.map(s=>s.str).join(' ')+"\n";
-                        }
-                    } else txt=await f.text();
-                    document.getElementById('brain-content').value=txt;
-                    if(!document.getElementById('brain-title').value) document.getElementById('brain-title').value=f.name;
-                } catch(e){alert('خطا در فایل')}
-                this.state.processing=false; this.render();
-            }
-            addBrain(){
-                const t=document.getElementById('brain-title').value;
-                const c=document.getElementById('brain-content').value;
-                if(t&&c){this.state.brain.push({id:Date.now(),title:t,content:c});this.saveStores();this.render();}
-            }
-            delBrain(id){ this.state.brain=this.state.brain.filter(b=>b.id!==id); this.saveStores(); this.render(); }
-
-            createProject(){
-                if(!this.state.selectedBriefId) return alert('بریف انتخاب نشده');
-                const n=document.getElementById('new-proj-name').value;
-                if(!n)return;
-                const p={id:Date.now().toString(),name:n,plat:document.getElementById('new-proj-plat').value,briefId:this.state.selectedBriefId,date:new Date().toLocaleDateString('fa-IR'),data:{}};
-                this.state.projects.unshift(p); this.saveStores(); this.nav('wizard',p.id);
-            }
+            createProject(){ if(!this.state.selBrId)return alert('بریف؟'); const n=document.getElementById('new-proj-name').value; if(n){this.state.projects.unshift({id:Date.now().toString(),name:n,briefId:this.state.selBrId,plat:'Instagram',date:new Date().toLocaleDateString('fa-IR'),data:{}});this.saveStores();this.nav('wizard',this.state.projects[0].id);} }
             delProj(id){ this.state.projects=this.state.projects.filter(p=>p.id!==id); this.saveStores(); this.render(); }
-
-            setTmp(k,v){ this.state.tempData[k]=v; }
-            setCF(id,v){ 
-                if(!this.state.tempData.contentFields) this.state.tempData.contentFields={};
-                this.state.tempData.contentFields[id]=v;
-            }
-            step(d){
-                const ns=this.state.step+d;
-                if(ns>5){
-                    const idx=this.state.projects.findIndex(p=>p.id===this.state.activeProj.id);
-                    this.state.projects[idx].data={...this.state.tempData};
-                    this.saveStores(); this.nav('home');
-                } else if(ns>=1){ this.state.step=ns; this.render(); }
-            }
-
-            // --- AI CORE (BUG FIXES) ---
+            async handleFile(e){ const f=e.target.files[0]; if(!f)return; this.state.processing=true; this.render(); try{let t="";if(f.type=='application/pdf'){const a=await f.arrayBuffer();const p=await pdfjsLib.getDocument(a).promise;for(let i=1;i<=p.numPages;i++){const g=await p.getPage(i);const c=await g.getTextContent();t+=c.items.map(s=>s.str).join(' ')+"\n";}}else t=await f.text();document.getElementById('br-con').value=t;if(!document.getElementById('br-title').value)document.getElementById('br-title').value=f.name;}catch(e){alert('Err')} this.state.processing=false;this.render(); }
+            addBrain(){ const t=document.getElementById('brain-title').value,c=document.getElementById('br-con').value; if(t&&c){this.state.brain.push({id:Date.now(),title:t,content:c});this.saveStores();this.render();} }
+            delBrain(id){ this.state.brain=this.state.brain.filter(b=>b.id!==id); this.saveStores(); this.render(); }
             
-            // 1. JSON Cleaning Function (Fixes "JSON parsing failed")
-            cleanJSON(text) {
-                // Remove Markdown code blocks
-                let clean = text.replace(/```json/g, '').replace(/```/g, '');
-                // Find the first { and last }
-                const first = clean.indexOf('{');
-                const last = clean.lastIndexOf('}');
-                if(first !== -1 && last !== -1) {
-                    return clean.substring(first, last + 1);
-                }
-                return clean; // Fallback
-            }
+            setD(k,v){ this.state.tempData[k]=v; }
+            setCF(k,v){ if(!this.state.tempData.cf)this.state.tempData.cf={}; this.state.tempData.cf[k]=v; }
+            step(d){ const ns=this.state.step+d; if(ns>5){const i=this.state.projects.findIndex(p=>p.id==this.state.activeProj.id);this.state.projects[i].data={...this.state.tempData};this.saveStores();this.nav('home');}else if(ns>=1){this.state.step=ns;this.render();} }
 
+            // --- UNIVERSAL AI CALL ---
             async callAI(prompt, jsonMode = false) {
-                if(!this.state.apiKey) return "MOCK: کلید وارد نشده";
-                
+                const prov = this.state.provider;
                 const b = this.state.activeBrief;
-                let sys = `ROLE: Marketing Expert.\nContext: Brand:${b.name}, Aud:${b.aud}, Tone:${b.tone}.\nKnowledge:\n`;
-                this.state.brain.forEach(d => sys += `Source ${d.title}: ${d.content.substring(0,800)}...\n`);
                 
-                if(jsonMode) sys += "\nIMPORTANT: Return ONLY valid JSON. No text before/after.";
+                // Context Building
+                let sys = `ROLE: Marketing Expert. Lang: Persian. Brand:${b.name}, Aud:${b.aud}, Tone:${b.tone}.\nKnowledge:\n`;
+                this.state.brain.forEach(d => sys += `Source ${d.title}: ${d.content.substring(0,800)}...\n`);
+                if(jsonMode) sys += "\nRETURN ONLY JSON.";
 
-                const model = this.state.model;
-                // Fix: Using correct URL structure for v1beta
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${this.state.apiKey}`;
+                const fullPrompt = sys + "\nTASK: " + prompt;
 
                 try {
-                    const res = await fetch(url, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ contents: [{ parts: [{ text: sys + "\nTASK: " + prompt }] }] })
-                    });
-                    const d = await res.json();
-                    
-                    if(d.error) {
-                        return `ERROR: ${d.error.message}`; // Fix: Handle model not found error gracefully
+                    // GEMINI NATIVE
+                    if (prov === 'gemini') {
+                        if(!this.state.geminiKey) return "MOCK: کلید گوگل وارد نشده";
+                        const url = `https://generativelanguage.googleapis.com/v1beta/models/${this.state.geminiModel}:generateContent?key=${this.state.geminiKey}`;
+                        const res = await fetch(url, {
+                            method: 'POST', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+                        });
+                        const data = await res.json();
+                        if(data.error) return "API Error: " + data.error.message;
+                        return data.candidates[0].content.parts[0].text;
+                    } 
+                    // OPENAI / CUSTOM
+                    else {
+                        if(!this.state.customKey) return "MOCK: کلید Custom وارد نشده";
+                        // Remove trailing slash if present
+                        const baseUrl = this.state.customUrl.replace(/\/$/, "");
+                        const url = `${baseUrl}/chat/completions`;
+                        
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${this.state.customKey}`
+                            },
+                            body: JSON.stringify({
+                                model: this.state.customModel,
+                                messages: [
+                                    { role: "system", content: sys },
+                                    { role: "user", content: prompt }
+                                ],
+                                // Some providers support json_object, but not all. Safer to leave it to prompt.
+                            })
+                        });
+                        
+                        const data = await res.json();
+                        if(data.error) return "API Error: " + data.error.message;
+                        return data.choices[0].message.content;
                     }
-                    
-                    return d.candidates[0].content.parts[0].text;
                 } catch(e) { return "Network Error: " + e.message; }
             }
 
+            cleanJSON(text) {
+                const clean = text.replace(/```json/g, '').replace(/```/g, '').trim();
+                const s = clean.indexOf('{'), e = clean.lastIndexOf('}');
+                return (s!==-1 && e!==-1) ? clean.substring(s, e+1) : clean;
+            }
+
             async autoFill() {
-                const d = this.state.tempData;
-                const tmpl = FRAMEWORKS[d.tmpl];
+                const d=this.state.tempData; const tmpl=FRAMEWORKS[d.tmpl];
+                const cont=document.getElementById('f-cont'); cont.innerHTML='<div class="flicker">AI Generating...</div>';
                 
-                const cont = document.getElementById('fields-container');
-                cont.innerHTML = '<div class="flicker text-accent">درحال نوشتن با هوش مصنوعی...</div>';
-                
-                const prompt = `Write content for framework: ${d.tmpl}.
-                Objective: ${d.obj}. Topic: ${d.offer}.
-                Return JSON keys: ${tmpl.fields.map(f=>f.id).join(',')}.
-                Language: Persian.`;
-                
+                const prompt = `Write ad content for ${d.tmpl}. Obj:${d.obj}, Topic:${d.offer}. Return JSON keys: ${tmpl.fields.map(f=>f.id).join(',')}`;
                 const res = await this.callAI(prompt, true);
                 
-                if(res.startsWith("ERROR")) {
-                    alert(res);
-                    this.render(); // Reload inputs
-                    return;
-                }
+                if(res.includes("Error") || res.includes("MOCK")) { alert(res); this.render(); return; }
 
                 try {
-                    const json = JSON.parse(this.cleanJSON(res));
-                    if(!this.state.tempData.contentFields) this.state.tempData.contentFields={};
-                    tmpl.fields.forEach(f => {
-                        if(json[f.id]) this.state.tempData.contentFields[f.id] = json[f.id];
-                    });
-                } catch(e) {
-                    console.error("JSON Parse Error", res);
-                    alert("AI text received but format was wrong. See console.");
-                }
+                    const j = JSON.parse(this.cleanJSON(res));
+                    if(!d.cf) d.cf={};
+                    tmpl.fields.forEach(f => { if(j[f.id]) d.cf[f.id]=j[f.id]; });
+                } catch(e){ console.log(res); alert("JSON Parse Fail"); }
                 this.render();
             }
 
             async analyze() {
-                const btn=document.getElementById('btn-anlz'); btn.innerText='...'; btn.disabled=true;
-                const d=this.state.tempData;
-                let txt=""; if(d.contentFields) Object.values(d.contentFields).forEach(v=>txt+=v+"\n");
-                
-                const prompt = `Analyze this Persian copy (${d.tmpl}). Content: ${txt}. Provide Strengths, Weaknesses, Fixes.`;
-                const res = await this.callAI(prompt, false);
-                
-                this.state.tempData.aiRes = res;
-                document.getElementById('ai-res').innerHTML = res;
-                document.getElementById('ai-res').classList.remove('hidden');
-                btn.innerText='تحلیل'; btn.disabled=false;
+                const b=document.getElementById('btn-anlz'); b.innerText='...'; b.disabled=true;
+                const d=this.state.tempData; let t=""; if(d.cf) Object.values(d.cf).forEach(v=>t+=v+"\n");
+                const res = await this.callAI(`Analyze this copy: ${t}. Give Strengths, Weaknesses, Fixes.`, false);
+                this.state.tempData.aiRes=res; document.getElementById('ai-res').innerHTML=res; document.getElementById('ai-res').classList.remove('hidden'); b.disabled=false; b.innerText='تحلیل';
             }
 
             async caption() {
-                const btn=document.getElementById('btn-cap'); btn.innerText='...'; btn.disabled=true;
-                const d=this.state.tempData;
-                let txt=""; if(d.contentFields) Object.values(d.contentFields).forEach(v=>txt+=v+"\n");
-                
-                const prompt = `Write Persian caption for: ${txt}. Add emojis & 10 hashtags.`;
-                const res = await this.callAI(prompt, false);
-                
-                this.state.tempData.caption = res;
-                document.getElementById('final-cap').value = res;
-                btn.innerText='کپشن'; btn.disabled=false;
+                const b=document.getElementById('btn-cap'); b.innerText='...'; b.disabled=true;
+                const d=this.state.tempData; let t=""; if(d.cf) Object.values(d.cf).forEach(v=>t+=v+"\n");
+                const res = await this.callAI(`Write caption for: ${t}. Add hashtags.`, false);
+                this.state.tempData.cap=res; document.getElementById('fcap').value=res; b.disabled=false; b.innerText='کپشن';
             }
         }
-
         const app = new App();
     </script>
 </body>
