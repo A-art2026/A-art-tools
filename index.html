@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A_art Planner | AI Creative Suite</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;700&family=Vazirmatn:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- DESIGN SYSTEM: Vantablack & Acid Lime --- */
+        :root {
+            --bg-deep: #050505;
+            --bg-card: #1A1A1A;
+            --bg-input: #0f0f0f;
+            --accent: #CCFF00;
+            --accent-dim: rgba(204, 255, 0, 0.15);
+            --text-main: #F2F2F2;
+            --text-muted: #888888;
+            --border: #333333;
+            
+            --status-green: #00ff66;
+            --status-yellow: #ffcc00;
+            --status-red: #ff3333;
+            --status-off: #444444;
+
+            --font-fa: 'Vazirmatn', sans-serif;
+            --font-en: 'Lexend', sans-serif;
+
+            --radius: 12px;
+            --shadow-neon: 0 0 10px rgba(204, 255, 0, 0.1);
+        }
+
+        * { box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            background-color: var(--bg-deep);
+            color: var(--text-main);
+            font-family: var(--font-fa);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* English/Number Font Override */
+        .en-text, input[type="password"], .font-en { font-family: var(--font-en); }
+
+        /* --- BACKGROUND AURA (ANIMATED & REACTIVE) --- */
+        #aura-container {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        #aura-blob {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 50vw; height: 50vw;
+            background: radial-gradient(circle, rgba(204,255,0,0.08) 0%, rgba(5,5,5,0) 65%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.1s ease-out, opacity 0.1s ease-out; /* Fast reaction to typing */
+            animation: drift 15s infinite alternate ease-in-out, warp 10s infinite ease-in-out;
+        }
+        
+        @keyframes drift {
+            0% { transform: translate(-50%, -50%); }
+            25% { transform: translate(-45%, -55%); }
+            50% { transform: translate(-55%, -45%); }
+            75% { transform: translate(-52%, -48%); }
+            100% { transform: translate(-50%, -50%); }
+        }
+        @keyframes warp {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -50%) scale(1.1); }
+        }
+
+        /* React class for JS to toggle on keydown */
+        .aura-reacting {
+            width: 40vw !important;
+            opacity: 0.3 !important;
+        }
+
+        /* --- TYPOGRAPHY & LAYOUT --- */
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; position: relative; z-index: 10; }
+        
+        h1, h2, h3 { margin: 0 0 15px 0; color: var(--text-main); font-weight: 700; }
+        h1 { font-size: 1.8rem; }
+        h2 { font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        h2::before { content:''; display:block; width:4px; height:24px; background:var(--accent); border-radius:2px; }
+        p { color: var(--text-muted); line-height: 1.8; margin-bottom: 20px; font-size: 0.95rem; }
+
+        .flex { display: flex; }
+        .flex-col { flex-direction: column; }
+        .justify-between { justify-content: space-between; }
+        .items-center { align-items: center; }
+        .gap-10 { gap: 10px; }
+        .w-full { width: 100%; }
+        .hidden { display: none !important; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+
+        /* --- COMPONENTS --- */
+        
+        /* Neon Box (Improved) */
+        .neon-box {
+            position: relative;
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 2px; /* Border width */
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .neon-box::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%; width: 200%; height: 200%;
+            background: conic-gradient(from 0deg, transparent 0deg, transparent 90deg, var(--accent) 130deg, transparent 180deg);
+            animation: rotate 4s linear infinite;
+        }
+        .neon-box-inner {
+            position: relative;
+            background: var(--bg-deep); /* Inner dark */
+            border-radius: 10px;
+            padding: 25px;
+            z-index: 1;
+        }
+        @keyframes rotate { 100% { transform: rotate(360deg); } }
+
+        /* Inputs */
+        input, select, textarea {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-family: var(--font-fa);
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 8px var(--accent-dim);
+        }
+        label { display: block; color: var(--text-muted); margin-bottom: 6px; font-size: 0.85rem; }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: var(--font-fa);
+            font-size: 0.9rem;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.2s;
+        }
+        .btn:hover { border-color: var(--accent); color: var(--accent); }
+        
+        .btn-primary {
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            font-weight: 700;
+        }
+        .btn-primary:hover {
+            background: #b3e600;
+            box-shadow: 0 0 15px rgba(204,255,0,0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-icon { padding: 8px; border-radius: 6px; }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* --- LOGO ANIMATION (Fast Flicker) --- */
+        .brand-logo {
+            font-family: var(--font-en);
+            font-weight: 900;
+            font-size: 1.4rem;
+            letter-spacing: -1px;
+            color: #fff;
+        }
+        .brand-accent {
+            color: var(--accent);
+            animation: flicker-fast 0.15s infinite alternate;
+            text-shadow: 0 0 2px var(--accent);
+        }
+        @keyframes flicker-fast {
+            0% { opacity: 1; text-shadow: 0 0 4px var(--accent); }
+            50% { opacity: 0.8; text-shadow: 0 0 1px var(--accent); }
+            100% { opacity: 0.9; text-shadow: 0 0 3px var(--accent); }
+        }
+
+        /* --- HEADER & NAV --- */
+        header {
+            background: rgba(5,5,5,0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 15px 0;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .nav-link {
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; font-family: var(--font-fa); margin-right: 15px;
+            transition: 0.3s; font-size: 0.9rem;
+        }
+        .nav-link.active { color: var(--text-main); text-shadow: 0 0 10px rgba(255,255,255,0.1); }
+
+        /* --- WIZARD PROGRESS --- */
+        .wizard-steps { display: flex; justify-content: space-between; margin-bottom: 30px; position: relative; }
+        .wizard-steps::after { content:''; position: absolute; top: 12px; left:0; right:0; height:1px; background: #333; z-index: -1; }
+        .step {
+            background: var(--bg-deep);
+            border: 1px solid #444;
+            color: #666;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            transition: 0.3s;
+        }
+        .step.active { border-color: var(--accent); color: var(--accent); background: #111; box-shadow: 0 0 5px rgba(204,255,0,0.2); }
+
+        /* --- TRAFFIC LIGHTS (Checklist) --- */
+        .check-row {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #111; padding: 12px 15px; border-radius: 8px; margin-bottom: 8px;
+            border: 1px solid #222;
+        }
+        .light {
+            width: 14px; height: 14px; border-radius: 50%;
+            background: var(--status-off);
+            transition: all 0.5s ease;
+            box-shadow: inset 0 0 2px rgba(0,0,0,0.5);
+        }
+        .light.green { background: var(--status-green); box-shadow: 0 0 8px var(--status-green); }
+        .light.yellow { background: var(--status-yellow); box-shadow: 0 0 8px var(--status-yellow); }
+        .light.red { background: var(--status-red); box-shadow: 0 0 8px var(--status-red); }
+
+        /* --- MODAL --- */
+        dialog {
+            background: var(--bg-card); color: var(--text-main);
+            border: 1px solid var(--accent); border-radius: var(--radius);
+            padding: 30px; max-width: 600px; width: 90%;
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+        }
+        dialog::backdrop { background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); }
+
+        /* Mobile Fixes */
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .wizard-steps { overflow-x: auto; gap: 10px; padding-bottom: 5px; }
+            .wizard-steps::after { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMATED BACKGROUND -->
+    <div id="aura-container"><div id="aura-blob"></div></div>
+
+    <!-- SETTINGS MODAL -->
+    <dialog id="settings-modal">
+        <h2>تنظیمات اتصال (Gemini API)</h2>
+        <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:20px; font-size:0.9rem; line-height:1.8;">
+            <p>برای هوش مصنوعی، شما به یک کلید API رایگان از گوگل نیاز دارید:</p>
+            <ol style="margin:0; padding-right:20px; color:#aaa">
+                <li>وارد سایت <a href="https://aistudio.google.com/" target="_blank" style="color:var(--accent)">Google AI Studio</a> شوید.</li>
+                <li>روی دکمه "Create API Key" کلیک کنید.</li>
+                <li>کلید ساخته شده را کپی کرده و در کادر زیر قرار دهید.</li>
+                <li>بدون کلید، نرم‌افزار در حالت "آفلاین/تست" کار می‌کند.</li>
+            </ol>
+        </div>
+        
+        <label>کلید API</label>
+        <input type="password" id="api-key-input" class="en-text" placeholder="مثال: AIzaSy...">
+        
+        <div class="flex justify-between items-center mt-lg">
+            <button class="btn" onclick="document.getElementById('settings-modal').close()">بازگشت</button>
+            <button class="btn btn-primary" onclick="app.saveSettings()">ذخیره تنظیمات</button>
+        </div>
+    </dialog>
+
+    <!-- BUSINESS PROFILE MODAL -->
+    <dialog id="business-modal">
+        <h2>پروفایل کسب‌وکار (تنظیمات سراسری)</h2>
+        <p>اطلاعات زیر به صورت خودکار در پروژه‌های جدید شما قرار می‌گیرند.</p>
+        
+        <div class="grid-2">
+            <div>
+                <label>نام برند / بیزینس</label>
+                <input type="text" id="biz-name">
+            </div>
+            <div>
+                <label>حوزه فعالیت</label>
+                <input type="text" id="biz-field" placeholder="مثال: فروشگاه لباس">
+            </div>
+        </div>
+        <label>مخاطب هدف (پیش‌فرض)</label>
+        <textarea id="biz-audience" rows="2" placeholder="مثال: خانم‌های خانه‌دار ۲۵ تا ۴۰ سال..."></textarea>
+        
+        <label>آفر / مزیت رقابتی اصلی</label>
+        <textarea id="biz-offer" rows="2" placeholder="مثال: ارسال رایگان، ضمانت بازگشت..."></textarea>
+        
+        <div class="flex justify-between items-center">
+            <button class="btn" onclick="document.getElementById('business-modal').close()">انصراف</button>
+            <button class="btn btn-primary" onclick="app.saveBusinessProfile()">ذخیره پروفایل</button>
+        </div>
+    </dialog>
+
+    <!-- HEADER -->
+    <header>
+        <div class="container flex justify-between items-center">
+            <div class="brand-logo"><span class="brand-accent">A_art</span> Planner</div>
+            <nav>
+                <button class="nav-link active" onclick="app.navigate('home')">داشبورد</button>
+                <button class="nav-link" onclick="document.getElementById('business-modal').showModal()">پروفایل بیزینس</button>
+                <button class="nav-link" onclick="document.getElementById('settings-modal').showModal()">تنظیمات API</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN APP AREA -->
+    <main id="app-root" class="container" style="margin-top:30px;">
+        <!-- Dynamic Content Injected Here -->
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA & STATE ---
+        const ICONS = {
+            copy: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+            magic: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`,
+            trash: `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`
+        };
+
+        const TEMPLATES = {
+            'AIDA': "Attention (توجه), Interest (علاقه), Desire (اشتیاق), Action (اقدام)",
+            'PAS': "Problem (مشکل), Agitation (تحریک), Solution (راه‌حل)",
+            'FAB': "Features (ویژگی), Advantages (مزیت), Benefits (سود نهایی)",
+            'STORY': "Hero's Journey Lite (داستان‌سرایی و سفر قهرمان)"
+        };
+
+        const CHECKLIST_ITEMS = [
+            { id: 'hook', label: 'شفافیت و قدرت هوک (۳ ثانیه اول)' },
+            { id: 'benefit', label: 'وعده سود و منفعت برای کاربر' },
+            { id: 'cta', label: 'قدرت و وضوح فراخوان (CTA)' },
+            { id: 'tone', label: 'تطابق لحن با پرسونای مخاطب' }
+        ];
+
+        class App {
+            constructor() {
+                this.state = {
+                    view: 'home',
+                    projects: JSON.parse(localStorage.getItem('aart_projects') || '[]'),
+                    apiKey: localStorage.getItem('aart_apikey') || '',
+                    bizProfile: JSON.parse(localStorage.getItem('aart_biz') || '{}'),
+                    visualHistory: JSON.parse(localStorage.getItem('aart_visuals') || '[]'),
+                    activeProject: null,
+                    wizardStep: 1,
+                    tempData: {}
+                };
+                this.init();
+            }
+
+            init() {
+                // Aura Typing Effect
+                window.addEventListener('keydown', () => {
+                    const blob = document.getElementById('aura-blob');
+                    blob.classList.add('aura-reacting');
+                    clearTimeout(this.typingTimer);
+                    this.typingTimer = setTimeout(() => blob.classList.remove('aura-reacting'), 150);
+                });
+
+                if (!this.state.apiKey) {
+                    setTimeout(() => document.getElementById('settings-modal').showModal(), 1000);
+                }
+                this.render();
+            }
+
+            /* --- STORAGE HELPERS --- */
+            saveSettings() {
+                const key = document.getElementById('api-key-input').value.trim();
+                this.state.apiKey = key;
+                localStorage.setItem('aart_apikey', key);
+                document.getElementById('settings-modal').close();
+                alert('تنظیمات ذخیره شد');
+            }
+
+            saveBusinessProfile() {
+                const profile = {
+                    name: document.getElementById('biz-name').value,
+                    field: document.getElementById('biz-field').value,
+                    audience: document.getElementById('biz-audience').value,
+                    offer: document.getElementById('biz-offer').value
+                };
+                this.state.bizProfile = profile;
+                localStorage.setItem('aart_biz', JSON.stringify(profile));
+                document.getElementById('business-modal').close();
+                alert('پروفایل بیزینس ذخیره شد');
+            }
+
+            saveProjects() {
+                localStorage.setItem('aart_projects', JSON.stringify(this.state.projects));
+            }
+
+            addToVisualHistory(text) {
+                if(!text) return;
+                if(!this.state.visualHistory.includes(text)) {
+                    this.state.visualHistory.unshift(text);
+                    if(this.state.visualHistory.length > 10) this.state.visualHistory.pop();
+                    localStorage.setItem('aart_visuals', JSON.stringify(this.state.visualHistory));
+                }
+            }
+
+            /* --- NAVIGATION & ACTIONS --- */
+            navigate(view, projectId = null) {
+                this.state.view = view;
+                document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+                
+                if (view === 'home') {
+                    document.querySelector('.nav-link:first-child').classList.add('active');
+                    this.state.activeProject = null;
+                } else if (view === 'wizard') {
+                    this.state.activeProject = this.state.projects.find(p => p.id === projectId);
+                    this.state.wizardStep = 1;
+                    this.state.tempData = { ...this.state.activeProject.data };
+                }
+                this.render();
+            }
+
+            createProject() {
+                const name = document.getElementById('new-project-name').value;
+                if (!name) return alert('نام پروژه الزامی است');
+                
+                // Pre-fill with Business Profile
+                const initialData = {
+                    audience: this.state.bizProfile.audience || '',
+                    offer: this.state.bizProfile.offer || ''
+                };
+
+                const newProj = {
+                    id: Date.now().toString(),
+                    name: name,
+                    platform: document.getElementById('new-platform').value,
+                    created: new Date().toLocaleDateString('fa-IR'),
+                    data: initialData
+                };
+
+                this.state.projects.unshift(newProj);
+                this.saveProjects();
+                this.navigate('wizard', newProj.id);
+            }
+
+            deleteProject(id, e) {
+                e.stopPropagation();
+                if(confirm('آیا از حذف این پروژه اطمینان دارید؟')) {
+                    this.state.projects = this.state.projects.filter(p => p.id !== id);
+                    this.saveProjects();
+                    this.render();
+                }
+            }
+
+            /* --- RENDERER --- */
+            render() {
+                const root = document.getElementById('app-root');
+                root.innerHTML = '';
+                
+                if (this.state.view === 'home') root.appendChild(this.renderHome());
+                else if (this.state.view === 'wizard') root.appendChild(this.renderWizard());
+            }
+
+            renderHome() {
+                const div = document.createElement('div');
+                // Auto-fill inputs if biz profile exists
+                const bizName = this.state.bizProfile.name || '';
+                
+                div.innerHTML = `
+                    <div class="neon-box">
+                        <div class="neon-box-inner">
+                            <h2>${bizName ? `پروژه جدید برای <span style="color:var(--accent)">${bizName}</span>` : 'شروع پروژه جدید'}</h2>
+                            <div class="grid-2" style="align-items:end">
+                                <div>
+                                    <label>نام پروژه / کمپین</label>
+                                    <input type="text" id="new-project-name" placeholder="مثلا: استوری‌های جشنواره پاییزه" style="margin:0">
+                                </div>
+                                <div class="flex gap-10">
+                                    <div class="w-full">
+                                        <label>پلتفرم</label>
+                                        <select id="new-platform" style="margin:0">
+                                            <option value="Instagram Post">Instagram Post</option>
+                                            <option value="Instagram Reel">Instagram Reel</option>
+                                            <option value="Instagram Story">Instagram Story</option>
+                                            <option value="Telegram Post">Telegram Post</option>
+                                            <option value="LinkedIn">LinkedIn</option>
+                                            <option value="Website">Web Banner/Blog</option>
+                                            <option value="Multi">Multi-Channel</option>
+                                        </select>
+                                    </div>
+                                    <button class="btn btn-primary" onclick="app.createProject()" style="height:48px; margin-top:23px">
+                                        ساختن
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top:40px">لیست پروژه‌ها</h3>
+                    ${this.state.projects.length === 0 ? '<p>هنوز پروژه‌ای ندارید.</p>' : ''}
+                    <div class="grid-3">
+                        ${this.state.projects.map(p => `
+                            <div class="card" style="cursor:pointer; transition:0.2s" onclick="app.navigate('wizard', '${p.id}')" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+                                <div class="flex justify-between items-center mb-lg">
+                                    <strong>${p.name}</strong>
+                                    <button class="btn btn-icon" onclick="app.deleteProject('${p.id}', event)" style="color:var(--status-red); border:none; padding:0">${ICONS.trash}</button>
+                                </div>
+                                <div style="font-size:0.8rem; color:#666">
+                                    ${p.platform}<br>${p.created}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                return div;
+            }
+
+            renderWizard() {
+                const step = this.state.wizardStep;
+                const p = this.state.activeProject;
+                
+                const steps = [
+                    'استراتژی', 'تمپلیت', 'محتوا', 'آنالیز AI', 'کپشن', 'خروجی نهایی'
+                ];
+
+                const container = document.createElement('div');
+                
+                // Header of Wizard
+                const headerHtml = `
+                    <div class="flex justify-between items-center" style="margin-bottom:20px">
+                        <button class="btn" onclick="app.navigate('home')">← داشبورد</button>
+                        <h2 style="margin:0; font-size:1.1rem; border:none">${p.name} <span style="color:var(--accent); font-size:0.9rem; margin-right:10px">(${p.platform})</span></h2>
+                    </div>
+                    
+                    <div class="wizard-steps">
+                        ${steps.map((lbl, i) => `
+                            <div class="step ${i+1 === step ? 'active' : ''}">${i+1}. ${lbl}</div>
+                        `).join('')}
+                    </div>
+                `;
+
+                let contentHtml = '';
+                switch(step) {
+                    case 1: contentHtml = this.step1(); break;
+                    case 2: contentHtml = this.step2(); break;
+                    case 3: contentHtml = this.step3(); break;
+                    case 4: contentHtml = this.step4(); break;
+                    case 5: contentHtml = this.step5(); break;
+                    case 6: contentHtml = this.step6(); break;
+                }
+
+                container.innerHTML = headerHtml + `
+                    <div class="card" style="min-height:450px; position:relative">
+                        ${contentHtml}
+                    </div>
+                    <div class="flex justify-between mt-lg">
+                        <button class="btn" onclick="app.prevStep()" ${step===1 ? 'disabled style="opacity:0"' : ''}>مرحله قبل</button>
+                        <button class="btn btn-primary" onclick="app.nextStep()">${step===6 ? 'پایان و ذخیره' : 'مرحله بعد'}</button>
+                    </div>
+                `;
+                return container;
+            }
+
+            /* --- STEPS CONTENT --- */
+            
+            step1() { // Strategy
+                const d = this.state.tempData;
+                return `
+                    <h3>تعیین استراتژی و هدف</h3>
+                    <div class="grid-2">
+                        <div>
+                            <label>هدف اصلی کمپین</label>
+                            <select id="w-obj">
+                                <option value="Awareness" ${d.obj=='Awareness'?'selected':''}>آگاهی از برند (Reach/Views)</option>
+                                <option value="Engagement" ${d.obj=='Engagement'?'selected':''}>تعامل (Like/Comment/Share)</option>
+                                <option value="Sales" ${d.obj=='Sales'?'selected':''}>فروش (Sales)</option>
+                                <option value="Leads" ${d.obj=='Leads'?'selected':''}>جذب سرنخ (Leads)</option>
+                                <option value="Clicks" ${d.obj=='Clicks'?'selected':''}>کلیک وب‌سایت</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>مخاطب هدف</label>
+                            <input type="text" id="w-aud" value="${d.aud || ''}" placeholder="چه کسی این محتوا را می‌بیند؟">
+                        </div>
+                    </div>
+                    <label>آفر / پیشنهاد / پیام کلیدی</label>
+                    <textarea id="w-offer" rows="3" placeholder="چه چیزی ارائه می‌دهید؟">${d.offer || ''}</textarea>
+                `;
+            }
+
+            step2() { // Template
+                const d = this.state.tempData;
+                const rec = (d.obj === 'Sales' || d.obj === 'Leads') ? 'PAS' : (d.obj === 'Awareness' ? 'FAB' : 'STORY');
+                
+                return `
+                    <h3>انتخاب قالب محتوا</h3>
+                    <div style="background:var(--bg-deep); border:1px dashed var(--accent); padding:15px; border-radius:8px; margin-bottom:20px">
+                        پیشنهاد هوش مصنوعی: <strong style="color:var(--accent); font-family:var(--font-en)">${rec}</strong>
+                    </div>
+
+                    <label>قالب انتخابی</label>
+                    <select id="w-tmpl" onchange="document.getElementById('tmpl-desc').innerText = TEMPLATES[this.value]">
+                        ${Object.keys(TEMPLATES).map(k => `<option value="${k}" ${ (d.tmpl||rec) === k ? 'selected' : '' }>${k}</option>`).join('')}
+                    </select>
+                    
+                    <p id="tmpl-desc" style="font-size:0.9rem; color:#aaa; margin-top:5px">
+                        ${TEMPLATES[d.tmpl || rec]}
+                    </p>
+                `;
+            }
+
+            step3() { // Content
+                const d = this.state.tempData;
+                const historyOpts = this.state.visualHistory.map(h => `<option value="${h}">`).join('');
+                
+                return `
+                    <h3>تولید محتوا (سناریو)</h3>
+                    <div class="grid-2">
+                        <div>
+                            <label>هوک (قلاب)</label>
+                            <input type="text" id="w-hook" value="${d.hook||''}" placeholder="جمله اول برای میخکوب کردن مخاطب...">
+                            
+                            <label>متن کامل سناریو / بدنه محتوا</label>
+                            <textarea id="w-script" rows="8" placeholder="متن کامل محتوا...">${d.script||''}</textarea>
+                        </div>
+                        <div>
+                            <label>فراخوان (CTA)</label>
+                            <input type="text" id="w-cta" value="${d.cta||''}" placeholder="تهش چیکار کنن؟">
+                            
+                            <label>ایده بصری (Visuals)</label>
+                            <input list="visual-history" id="w-vis" value="${d.vis||''}" placeholder="توصیف تصویر/ویدیو...">
+                            <datalist id="visual-history">${historyOpts}</datalist>
+                            <p style="font-size:0.75rem">می‌توانید از ایده‌های قبلی انتخاب کنید.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            step4() { // AI Analysis
+                const d = this.state.tempData;
+                return `
+                    <h3>آنالیز هوشمند محتوا</h3>
+                    <p>هوش مصنوعی محتوای شما را بررسی کرده و نقاط ضعف و قوت را شناسایی می‌کند.</p>
+                    
+                    <button class="btn btn-primary w-full" onclick="app.runAnalysis()" id="btn-analyze">
+                        ${ICONS.magic} شروع آنالیز
+                    </button>
+                    
+                    <div id="ai-res-box" class="hidden" style="margin-top:20px; animation: fadeIn 0.5s">
+                        ${d.analysisRes || ''}
+                    </div>
+                `;
+            }
+
+            step5() { // Caption
+                const d = this.state.tempData;
+                return `
+                    <h3>کپشن و هشتگ</h3>
+                    <div class="grid-3">
+                        <div>
+                            <label>لحن</label>
+                            <select id="c-tone">
+                                <option value="Friendly">دوستانه</option>
+                                <option value="Professional">رسمی</option>
+                                <option value="Bold">جنجالی/جسور</option>
+                                <option value="Minimal">مینیمال</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>طول</label>
+                            <select id="c-len">
+                                <option value="Short">کوتاه</option>
+                                <option value="Medium" selected>متوسط</option>
+                                <option value="Long">طولانی (میکروبلاگ)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label>زبان</label>
+                            <select id="c-lang">
+                                <option value="Persian">فارسی</option>
+                                <option value="English">English</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary w-full" style="margin:15px 0" onclick="app.runCaption()" id="btn-caption">
+                        نوشتن کپشن
+                    </button>
+
+                    <div class="grid-2">
+                        <div style="position:relative">
+                            <label>کپشن نهایی</label>
+                            <textarea id="w-final-cap" rows="6">${d.finalCap||''}</textarea>
+                            <button class="btn btn-icon" style="position:absolute; top:30px; left:5px; background:rgba(0,0,0,0.5)" onclick="app.copyToClip('w-final-cap')">${ICONS.copy}</button>
+                        </div>
+                        <div style="position:relative">
+                            <label>هشتگ‌ها</label>
+                            <textarea id="w-final-tags" rows="6" class="en-text" style="direction:ltr; text-align:left">${d.finalTags||''}</textarea>
+                            <button class="btn btn-icon" style="position:absolute; top:30px; right:5px; background:rgba(0,0,0,0.5)" onclick="app.copyToClip('w-final-tags')">${ICONS.copy}</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            step6() { // Final
+                const d = this.state.tempData;
+                
+                // If Checklist result exists in temp data, use statuses, else all 'off'
+                const statuses = d.checklistStatuses || { hook:'off', benefit:'off', cta:'off', tone:'off' };
+
+                return `
+                    <h3>بررسی نهایی (Quality Check)</h3>
+                    <div class="grid-2">
+                        <div>
+                            <div class="card" style="background:#111; border:none;">
+                                <h4 style="color:var(--accent)">خلاصه استراتژی</h4>
+                                <p><strong>هدف:</strong> ${d.obj} | <strong>مخاطب:</strong> ${d.aud}</p>
+                                <hr style="border-color:#333; margin:10px 0">
+                                <h4 style="color:var(--accent)">محتوا</h4>
+                                <p style="font-size:0.9rem; white-space:pre-wrap">${d.script}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-lg">
+                                <h4>چک‌لیست هوشمند</h4>
+                                <button class="btn" style="font-size:0.8rem; padding:5px 10px" onclick="app.runChecklist()" id="btn-check">
+                                    ${ICONS.magic} بررسی
+                                </button>
+                            </div>
+
+                            <div id="checklist-ui">
+                                ${CHECKLIST_ITEMS.map(item => `
+                                    <div class="check-row">
+                                        <span style="font-size:0.9rem">${item.label}</span>
+                                        <div class="light ${statuses[item.id]}" id="light-${item.id}"></div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <div id="check-msg" class="hidden" style="margin-top:10px; font-size:0.8rem; color:#aaa"></div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            /* --- NAV LOGIC --- */
+            saveStepData() {
+                const map = {
+                    1: ['w-obj', 'w-aud', 'w-offer'],
+                    2: ['w-tmpl'],
+                    3: ['w-hook', 'w-script', 'w-cta', 'w-vis'],
+                    4: [], // Analysis result is stored directly
+                    5: ['w-final-cap', 'w-final-tags'],
+                    6: []
+                };
+                
+                const ids = map[this.state.wizardStep] || [];
+                ids.forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        // Map ID to data key (remove 'w-' prefix)
+                        let key = id.replace('w-', '').replace('final-cap', 'finalCap').replace('final-tags', 'finalTags');
+                        if(id === 'w-obj') key = 'obj'; // manual fix for inconsistencies
+                        this.state.tempData[key] = el.value;
+                    }
+                });
+
+                // Add to visual history if on step 3
+                if (this.state.wizardStep === 3) {
+                    const vis = document.getElementById('w-vis');
+                    if (vis) this.addToVisualHistory(vis.value);
+                }
+            }
+
+            prevStep() {
+                this.saveStepData();
+                this.state.wizardStep--;
+                this.render();
+            }
+
+            nextStep() {
+                this.saveStepData();
+                if (this.state.wizardStep < 6) {
+                    this.state.wizardStep++;
+                    this.render();
+                } else {
+                    // Save Final
+                    this.state.activeProject.data = { ...this.state.tempData };
+                    this.saveProjects();
+                    alert('پروژه با موفقیت ذخیره شد.');
+                    this.navigate('home');
+                }
+            }
+
+            copyToClip(id) {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.select();
+                    document.execCommand('copy');
+                    alert('کپی شد!');
+                }
+            }
+
+            /* --- AI ENGINE --- */
+            cleanJson(text) {
+                // Aggressive cleaning to handle markdown code blocks
+                return text.replace(/```json/g, '').replace(/```/g, '').trim();
+            }
+
+            async callAI(prompt) {
+                if(!this.state.apiKey) {
+                    await new Promise(r => setTimeout(r, 1500));
+                    return "MOCK";
+                }
+                
+                try {
+                    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.state.apiKey}`;
+                    const res = await fetch(url, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+                    });
+                    const data = await res.json();
+                    if(data.error) throw new Error(data.error.message);
+                    return data.candidates[0].content.parts[0].text;
+                } catch(e) {
+                    console.error(e);
+                    alert("AI Error: " + e.message);
+                    return null;
+                }
+            }
+
+            /* --- AI ACTIONS --- */
+            async runAnalysis() {
+                const btn = document.getElementById('btn-analyze');
+                const box = document.getElementById('ai-res-box');
+                
+                this.saveStepData();
+                const d = this.state.tempData;
+
+                btn.innerText = 'درحال تحلیل...';
+                btn.disabled = true;
+
+                const prompt = `
+                    Act as a Senior Marketing Auditor. Language: Persian (Farsi).
+                    Analyze this ad content:
+                    Objective: ${d.obj}
+                    Audience: ${d.aud}
+                    Script: ${d.script}
+                    Hook: ${d.hook}
+                    
+                    Return valid HTML (no markdown, no \`\`\`).
+                    Structure:
+                    <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px">
+                       <h4 style="color:#0f0">نقاط قوت</h4>
+                       <ul><li>...</li></ul>
+                    </div>
+                    <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px">
+                       <h4 style="color:#f00">نقاط ضعف</h4>
+                       <ul><li>...</li></ul>
+                    </div>
+                    <div style="border:1px solid #CCFF00; padding:15px; border-radius:8px">
+                       <h4 style="color:#CCFF00">پیشنهاد بهبود</h4>
+                       <p>...</p>
+                    </div>
+                `;
+
+                let res = await this.callAI(prompt);
+                
+                if (res === "MOCK") {
+                    res = `
+                        <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px"><h4 style="color:#0f0">نقاط قوت</h4><ul><li>ساختار کلی رعایت شده است.</li><li>هوک جذابیت دارد.</li></ul></div>
+                        <div style="background:#111; padding:15px; border-radius:8px; margin-bottom:10px"><h4 style="color:#f00">نقاط ضعف</h4><ul><li>کال تو اکشن کمی مبهم است.</li></ul></div>
+                        <div style="border:1px solid #CCFF00; padding:15px; border-radius:8px"><h4 style="color:#CCFF00">پیشنهاد بهبود</h4><p>از افعال امری قوی‌تر استفاده کنید.</p></div>
+                        <p style="font-size:0.7rem; color:#666; margin-top:5px">(حالت آفلاین)</p>
+                    `;
+                } else if (res) {
+                    res = res.replace(/```html/g, '').replace(/```/g, '');
+                }
+
+                if(res) {
+                    this.state.tempData.analysisRes = res;
+                    box.innerHTML = res;
+                    box.classList.remove('hidden');
+                }
+                
+                btn.innerText = 'اجرای مجدد';
+                btn.disabled = false;
+            }
+
+            async runCaption() {
+                const btn = document.getElementById('btn-caption');
+                const d = this.state.tempData;
+                const tone = document.getElementById('c-tone').value;
+                const len = document.getElementById('c-len').value;
+                const lang = document.getElementById('c-lang').value;
+                
+                // Ensure latest script data is captured
+                d.script = this.state.tempData.script || ''; 
+
+                btn.innerText = 'درحال نوشتن...';
+                btn.disabled = true;
+
+                const prompt = `
+                    Write an Instagram/Social caption.
+                    Language: ${lang}. Tone: ${tone}. Length: ${len}.
+                    Topic: ${d.offer}. Content Context: ${d.script}.
+                    
+                    RETURN ONLY RAW JSON (No markdown):
+                    { "caption": "...", "hashtags": "#..." }
+                `;
+
+                let res = await this.callAI(prompt);
+                let json = { caption: "", hashtags: "" };
+
+                if(res === "MOCK") {
+                    json = { caption: "این یک کپشن تستی است.\nمحصول ما بهترین است! ✨", hashtags: "#تست #آفلاین" };
+                } else if (res) {
+                    try {
+                        json = JSON.parse(this.cleanJson(res));
+                    } catch(e) {
+                        json.caption = res; // Fallback
+                    }
+                }
+
+                document.getElementById('w-final-cap').value = json.caption;
+                document.getElementById('w-final-tags').value = json.hashtags;
+                
+                btn.innerText = 'نوشتن کپشن';
+                btn.disabled = false;
+            }
+
+            async runChecklist() {
+                const btn = document.getElementById('btn-check');
+                const d = this.state.tempData;
+                
+                btn.innerText = '...';
+                btn.disabled = true;
+
+                const prompt = `
+                    Evaluate this ad script:
+                    "${d.hook} ${d.script} ${d.cta}"
+                    Objective: ${d.obj}. Brand Tone: ${d.aud}.
+                    
+                    Assess these 4 criteria: Hook, Benefit, CTA, Tone.
+                    Assign status: "green" (Good), "yellow" (Average), "red" (Bad).
+                    
+                    RETURN ONLY RAW JSON ARRAY of strings (order: hook, benefit, cta, tone):
+                    ["green", "yellow", "red", "green"]
+                `;
+
+                let res = await this.callAI(prompt);
+                let statuses = ["off", "off", "off", "off"]; // default
+
+                if(res === "MOCK") {
+                    statuses = ["green", "yellow", "red", "green"];
+                } else if(res) {
+                    try {
+                        statuses = JSON.parse(this.cleanJson(res));
+                    } catch(e) { console.error(e); }
+                }
+
+                // Update UI lights
+                const keys = ['hook', 'benefit', 'cta', 'tone'];
+                const statusMap = {};
+                
+                keys.forEach((k, i) => {
+                    const status = statuses[i] || 'off';
+                    statusMap[k] = status;
+                    const el = document.getElementById(`light-${k}`);
+                    if(el) {
+                        el.className = `light ${status}`;
+                    }
+                });
+
+                this.state.tempData.checklistStatuses = statusMap;
+                btn.innerText = 'بررسی';
+                btn.disabled = false;
+                
+                const msg = document.getElementById('check-msg');
+                msg.innerText = "آنالیز انجام شد. نتایج در چراغ‌ها قابل مشاهده است.";
+                msg.classList.remove('hidden');
+            }
+        }
+
+        const app = new App();
+    </script>
+</body>
+</html>
